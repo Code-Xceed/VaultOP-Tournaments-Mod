@@ -6,7 +6,9 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -111,19 +113,19 @@ public class TournamentListScreen extends Screen {
 
         // Grid details buttons
         int gridWidth = this.width - 30;
-        int cols = Math.max(1, gridWidth / 150);
+        int cols = Math.max(1, gridWidth / 190);
 
         int cardY = 50;
         for (int i = 0; i < filteredTournaments.size(); i++) {
             final JsonObject t = filteredTournaments.get(i);
             int row = i / cols;
             int col = i % cols;
-            int x = 15 + col * 150;
-            int y = cardY + row * 120 - scrollOffset;
+            int x = 15 + col * 190;
+            int y = cardY + row * 180 - scrollOffset;
 
             // Details button inside card
-            boolean isVisible = (y >= 40 && y + 110 <= this.height - 30);
-            PremiumButtonWidget detailsBtn = new PremiumButtonWidget(x + 10, y + 80, 120, 20, Text.literal("View Info"), button -> {
+            boolean isVisible = (y >= 40 && y + 170 <= this.height - 30);
+            PremiumButtonWidget detailsBtn = new PremiumButtonWidget(x + 10, y + 142, 160, 20, Text.literal("View Info"), button -> {
                 this.client.setScreen(new TournamentDetailScreen(this, t));
             }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3);
             detailsBtn.visible = isVisible;
@@ -165,9 +167,9 @@ public class TournamentListScreen extends Screen {
         }
         
         int cardAreaHeight = this.height - 50 - 30;
-        int cols = Math.max(1, (this.width - 30) / 150);
+        int cols = Math.max(1, (this.width - 30) / 190);
         int rows = (filteredTournaments.size() + cols - 1) / cols;
-        int totalHeight = rows * 120;
+        int totalHeight = rows * 180;
         int maxScroll = Math.max(0, totalHeight - cardAreaHeight);
         if (scrollOffset > maxScroll) {
             scrollOffset = maxScroll;
@@ -181,9 +183,9 @@ public class TournamentListScreen extends Screen {
         if (verticalAmount != 0) {
             scrollOffset -= (int) Math.signum(verticalAmount) * 20;
             int cardAreaHeight = this.height - 50 - 30;
-            int cols = Math.max(1, (this.width - 30) / 150);
+            int cols = Math.max(1, (this.width - 30) / 190);
             int rows = (filteredTournaments.size() + cols - 1) / cols;
-            int totalHeight = rows * 120;
+            int totalHeight = rows * 180;
             int maxScroll = Math.max(0, totalHeight - cardAreaHeight);
             if (scrollOffset < 0) scrollOffset = 0;
             if (scrollOffset > maxScroll) scrollOffset = maxScroll;
@@ -212,18 +214,18 @@ public class TournamentListScreen extends Screen {
         }
 
         int gridWidth = this.width - 30;
-        int cols = Math.max(1, gridWidth / 150);
+        int cols = Math.max(1, gridWidth / 190);
 
         int cardY = 50;
         for (int i = 0; i < filteredTournaments.size(); i++) {
             JsonObject t = filteredTournaments.get(i);
             int row = i / cols;
             int col = i % cols;
-            int x = 15 + col * 150;
-            int y = cardY + row * 120 - scrollOffset;
+            int x = 15 + col * 190;
+            int y = cardY + row * 180 - scrollOffset;
 
             // Render boundary check
-            if (y + 110 < 40 || y > this.height - 30) continue;
+            if (y + 170 < 40 || y > this.height - 30) continue;
 
             String name = t.has("name") && !t.get("name").isJsonNull() ? t.get("name").getAsString() : "Unnamed Tournament";
             String status = t.has("status") && !t.get("status").isJsonNull() ? t.get("status").getAsString() : "REG_CLOSED";
@@ -237,13 +239,13 @@ public class TournamentListScreen extends Screen {
             String uStatus = getStatusFromLabel(label);
 
             // Hover state
-            boolean isHovered = mouseX >= x && mouseX <= x + 140 && mouseY >= y && mouseY <= y + 110;
+            boolean isHovered = mouseX >= x && mouseX <= x + 180 && mouseY >= y && mouseY <= y + 170;
             int bgColor = isHovered ? 0xFF252525 : 0xFF1E1E1E;
             int highlightColor = isHovered ? 0xFF2196F3 : 0xFF3C3C3C;
             int shadowColor = isHovered ? 0xFF0D2F4D : 0xFF0C0C0C;
 
             // Draw Beveled 3D Card
-            drawBeveledBox(context, x, y, 140, 110, bgColor, highlightColor, shadowColor);
+            drawBeveledBox(context, x, y, 180, 170, bgColor, highlightColor, shadowColor);
 
             // Left status indicator bar inside the card
             int indicatorColor = 0xFF888888;
@@ -260,49 +262,73 @@ public class TournamentListScreen extends Screen {
                     indicatorColor = 0xFF2196F3;
                 }
             }
-            context.fill(x + 3, y + 4, x + 6, y + 106, indicatorColor);
+            context.fill(x + 3, y + 4, x + 6, y + 166, indicatorColor);
+
+            // Thumbnail Image Box
+            int thumbX = x + 10;
+            int thumbY = y + 8;
+            int thumbW = 160;
+            int thumbH = 90;
+
+            // Draw background of thumbnail placeholder
+            context.fill(thumbX, thumbY, thumbX + thumbW, thumbY + thumbH, 0xFF050709);
+
+            String thumbUrl = t.has("thumbnailUrl") && !t.get("thumbnailUrl").isJsonNull() ? t.get("thumbnailUrl").getAsString() : "";
+            Identifier thumbTex = null;
+            if (!thumbUrl.isEmpty()) {
+                String tourneyId = t.has("id") && !t.get("id").isJsonNull() ? t.get("id").getAsString() : "unknown";
+                thumbTex = DynamicTextureLoader.getOrLoad(thumbUrl, tourneyId);
+            }
+
+            if (thumbTex != null) {
+                context.drawTexture(RenderLayer::getGuiTextured, thumbTex, thumbX, thumbY, 0.0f, 0.0f, thumbW, thumbH, thumbW, thumbH);
+            } else {
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("VAULTOP"), thumbX + thumbW / 2, thumbY + thumbH / 2 - 4, 0x44FFFFFF);
+            }
 
             // Status badge text
-            String statusBadgeText = "🔒 CLOSED";
+            String statusBadgeText = "🔒 COMPLETED";
             int badgeColor = 0xFF888888;
             if ("ONGOING".equals(status)) {
-                statusBadgeText = "🔴 ONGOING";
+                statusBadgeText = "🔴 LIVE";
                 badgeColor = 0xFFF44336;
             } else if ("REG_OPEN".equals(status)) {
-                statusBadgeText = "🟢 REG OPEN";
+                statusBadgeText = "🟢 UPCOMING (REG OPEN)";
                 badgeColor = 0xFF4CAF50;
             } else if ("REG_CLOSED".equals(status)) {
-                statusBadgeText = "🔒 REG CLOSED";
+                statusBadgeText = "🔒 UPCOMING (REG CLOSED)";
                 badgeColor = 0xFFFFB300;
             } else if ("COMPLETED".equals(status)) {
                 statusBadgeText = "🔒 COMPLETED";
                 badgeColor = 0xFF888888;
             }
-            context.drawTextWithShadow(this.textRenderer, Text.literal(statusBadgeText), x + 12, y + 8, badgeColor);
+            // Draw overlay background for badge readability
+            int textW = this.textRenderer.getWidth(statusBadgeText);
+            context.fill(thumbX + 4, thumbY + 4, thumbX + 8 + textW, thumbY + 14, 0xAA000000);
+            context.drawTextWithShadow(this.textRenderer, Text.literal(statusBadgeText), thumbX + 6, thumbY + 5, badgeColor);
 
             // Truncate name
             String displayTitle = name;
-            if (this.textRenderer.getWidth(displayTitle) > 116) {
-                displayTitle = this.textRenderer.trimToWidth(displayTitle, 108) + "...";
+            if (this.textRenderer.getWidth(displayTitle) > 156) {
+                displayTitle = this.textRenderer.trimToWidth(displayTitle, 148) + "...";
             }
-            context.drawTextWithShadow(this.textRenderer, Text.literal(displayTitle), x + 12, y + 22, isHovered ? 0xFF55FFFF : 0xFFFFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal(displayTitle), x + 12, y + 104, isHovered ? 0xFF55FFFF : 0xFFFFFFFF);
 
             // Metadata info
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Ver: " + gameVersion), x + 12, y + 38, 0x999999);
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Prize: " + prizePool), x + 12, y + 48, 0xFFFFD700);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Ver: " + gameVersion + " | Pool: " + prizePool), x + 12, y + 116, 0x999999);
 
             // User status badge
             int userBadgeColor = 0xFF888888;
             if ("APPROVED".equals(uStatus)) userBadgeColor = 0xFF4CAF50;
             else if ("PENDING".equals(uStatus)) userBadgeColor = 0xFFFF9800;
             else if ("REJECTED".equals(uStatus)) userBadgeColor = 0xFFF44336;
-            context.drawTextWithShadow(this.textRenderer, Text.literal(label.toUpperCase()), x + 12, y + 64, userBadgeColor);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("STATUS: " + label.toUpperCase()), x + 12, y + 128, userBadgeColor);
         }
 
         // Draw scrollbar if needed
         int cardAreaHeight = this.height - 50 - 30;
         int rows = (filteredTournaments.size() + cols - 1) / cols;
-        int totalHeight = rows * 120;
+        int totalHeight = rows * 180;
         if (totalHeight > cardAreaHeight) {
             int scrollbarX = this.width - 8;
             int scrollbarY = 50;

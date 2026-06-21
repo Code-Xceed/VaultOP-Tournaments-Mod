@@ -8,8 +8,10 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
 import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 
 import java.util.ArrayList;
@@ -332,31 +334,42 @@ public class TournamentDetailScreen extends Screen {
 
         // 1. Draw Giant Esports Banner Card at top
         TournamentListScreen.drawPremiumBeveledBox(context, 20, 45, this.width - 40, 60, 0xEE0B0F14, 0xFF2196F3, 0xFF0D2F4D);
-        
-        // Diagonal decorative line inside banner
-        context.fill(22, 47, this.width - 22, 48, 0x11FFFFFF);
 
+        String thumbUrl = tournament.has("thumbnailUrl") && !tournament.get("thumbnailUrl").isJsonNull() ? tournament.get("thumbnailUrl").getAsString() : "";
+        int textX = 30;
+        if (!thumbUrl.isEmpty()) {
+            String tourneyId = tournament.has("id") && !tournament.get("id").isJsonNull() ? tournament.get("id").getAsString() : "unknown";
+            Identifier thumbTex = DynamicTextureLoader.getOrLoad(thumbUrl, tourneyId);
+            if (thumbTex != null) {
+                // Draw 16:9 Thumbnail image on the left of the banner
+                context.drawTexture(RenderLayer::getGuiTextured, thumbTex, 22, 47, 0.0f, 0.0f, 106, 56, 106, 56);
+                // Vertical divider line separating thumbnail and details
+                context.fill(132, 47, 133, 103, 0xFF3C3C3C);
+                textX = 140;
+            }
+        }
+        
         // Name inside banner
-        context.drawTextWithShadow(this.textRenderer, Text.literal(name.toUpperCase()), 30, 53, 0xFFFFD700);
+        context.drawTextWithShadow(this.textRenderer, Text.literal(name.toUpperCase()), textX, 53, 0xFFFFD700);
 
         // Status Badge inside banner
         String statusBadgeText = "🔒 CLOSED";
         int badgeColor = 0xFF888888;
         if ("ONGOING".equals(status)) {
-            statusBadgeText = "🔴 ONGOING";
+            statusBadgeText = "🔴 LIVE";
             badgeColor = 0xFFF44336;
         } else if ("REG_OPEN".equals(status)) {
-            statusBadgeText = "🟢 REG OPEN";
+            statusBadgeText = "🟢 UPCOMING (REG OPEN)";
             badgeColor = 0xFF4CAF50;
         } else if ("REG_CLOSED".equals(status)) {
-            statusBadgeText = "🔒 REG CLOSED";
+            statusBadgeText = "🔒 UPCOMING (REG CLOSED)";
             badgeColor = 0xFFFFB300;
         } else if ("COMPLETED".equals(status)) {
             statusBadgeText = "🔒 COMPLETED";
             badgeColor = 0xFF888888;
         }
-        context.drawTextWithShadow(this.textRenderer, Text.literal(statusBadgeText), 30, 68, badgeColor);
-        context.drawTextWithShadow(this.textRenderer, Text.literal("Event Date: " + date), 30, 82, 0xFF888888);
+        context.drawTextWithShadow(this.textRenderer, Text.literal(statusBadgeText), textX, 68, badgeColor);
+        context.drawTextWithShadow(this.textRenderer, Text.literal("Event Date: " + date), textX, 82, 0xFF888888);
 
         // Giant countdown timer on the right side of the banner
         TournamentListScreen.drawPremiumBeveledBox(context, this.width - 170, 52, 140, 46, 0xEE070A0E, 0xFF2196F3, 0xFF0D2F4D);
@@ -433,7 +446,7 @@ public class TournamentDetailScreen extends Screen {
             // Spec 3: Event Date
             drawSpecCard(context, bX, renderY + 76, bW, "TOURNAMENT START DATE", date, 0xFFFFFF);
             // Spec 4: Server Status
-            String sVal = "ONGOING".equals(status) ? "LIVE" : ("REG_OPEN".equals(status) ? "REGISTRATION OPEN" : ("REG_CLOSED".equals(status) ? "REGISTRATION CLOSED" : "CLOSED"));
+            String sVal = "ONGOING".equals(status) ? "LIVE" : ("REG_OPEN".equals(status) ? "UPCOMING (REG OPEN)" : ("REG_CLOSED".equals(status) ? "UPCOMING (REG CLOSED)" : "COMPLETED"));
             drawSpecCard(context, bX, renderY + 114, bW, "TOURNAMENT STATUS", sVal, badgeColor);
 
         } else if ("RULES".equals(activeTab)) {
@@ -507,9 +520,9 @@ public class TournamentDetailScreen extends Screen {
             } else if ("REJECTED".equals(userStatus)) {
                 context.fill(28, cy, 20 + leftWidth - 8, cy + 45, 0x22F44336);
                 context.fill(28, cy, 29, cy + 45, 0xFFF44336);
-                context.drawTextWithShadow(this.textRenderer, Text.literal("REGISTRATION REJECTED"), 34, cy + 4, 0xFFF44336);
+                context.drawTextWithShadow(this.textRenderer, Text.literal("APPROVAL DECLINED"), 34, cy + 4, 0xFFF44336);
                 
-                List<OrderedText> rLines = this.textRenderer.wrapLines(Text.literal("Your application was rejected by event administrators. Check compliance regulations or contact staff."), leftWidth - 24);
+                List<OrderedText> rLines = this.textRenderer.wrapLines(Text.literal("Your application was declined by event administrators. Check compliance regulations or contact staff."), leftWidth - 24);
                 int ry = cy + 16;
                 for (OrderedText line : rLines) {
                     context.drawTextWithShadow(this.textRenderer, line, 34, ry, 0x999999);
