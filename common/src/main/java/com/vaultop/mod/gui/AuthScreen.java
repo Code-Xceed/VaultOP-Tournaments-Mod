@@ -18,8 +18,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 
 public class AuthScreen extends Screen {
-    private static final String BACKEND_URL = "http://localhost:8000";
-    
     private final Screen parent;
     private LocalhostCallbackServer callbackServer;
     
@@ -67,6 +65,7 @@ public class AuthScreen extends Screen {
             public void onSuccess(String token) {
                 statusText = "Authenticated successfully!";
                 VaultOPMod.getInstance().getSessionManager().saveSession(token);
+                VaultOPMod.getInstance().startWebSocket(token);
                 
                 // Close screen on the main client thread
                 MinecraftClient.getInstance().execute(() -> {
@@ -93,8 +92,9 @@ public class AuthScreen extends Screen {
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
                 
+        String backendUrl = VaultOPMod.getInstance().getConfigManager().getBackendUrl();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(BACKEND_URL + "/api/auth/mod/initiate"))
+                .uri(URI.create(backendUrl + "/api/auth/mod/initiate"))
                 .GET()
                 .build();
 
@@ -140,7 +140,7 @@ public class AuthScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         // Draw background dirt or default gradient
-        this.renderBackground(context);
+        this.renderBackground(context, mouseX, mouseY, delta);
         
         // Draw Titles
         context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 20, 0xFFFFFF);

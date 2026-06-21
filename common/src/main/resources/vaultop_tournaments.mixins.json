@@ -1,0 +1,10 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.codex.vaultop_tournaments.mixins",
+  "compatibilityLevel": "JAVA_${java_version}",
+  "mixins": [
+    "MinecraftMixin",
+    "TitleScreenMixin"
+  ]
+}
