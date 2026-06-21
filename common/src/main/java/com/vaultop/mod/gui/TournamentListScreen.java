@@ -58,16 +58,7 @@ public class TournamentListScreen extends Screen {
         context.fill(x + w - 2, y + 1, x + w - 1, y + h - 1, shadowColor);
     }
 
-    @Override
-    protected void init() {
-        // Setup Search Field in the center of the top bar
-        this.searchField = new TextFieldWidget(this.textRenderer, this.width / 2 - 75, 10, 150, 20, Text.literal("Search"));
-        this.searchField.setChangedListener(this::onSearchChanged);
-        this.searchField.setDrawsBackground(false);
-
-        rebuildWidgets();
-
-        // Fetch Tournaments from REST API
+    private void refreshList() {
         VaultOPMod.getInstance().getRestClient().fetchTournaments()
                 .thenAccept(array -> {
                     this.client.execute(() -> {
@@ -85,6 +76,31 @@ public class TournamentListScreen extends Screen {
                     });
                     return null;
                 });
+    }
+
+    @Override
+    protected void init() {
+        // Setup Search Field in the center of the top bar
+        this.searchField = new TextFieldWidget(this.textRenderer, this.width / 2 - 75, 10, 150, 20, Text.literal("Search"));
+        this.searchField.setChangedListener(this::onSearchChanged);
+        this.searchField.setDrawsBackground(false);
+
+        rebuildWidgets();
+
+        // Fetch Tournaments from REST API
+        refreshList();
+
+        // Listen for WebSocket notifications
+        if (VaultOPMod.getInstance().getWebSocketManager() != null) {
+            VaultOPMod.getInstance().getWebSocketManager().setMessageListener(json -> {
+                if (json.has("type") && !json.get("type").isJsonNull()) {
+                    String type = json.get("type").getAsString();
+                    if ("TOURNAMENT_UPDATED".equals(type) || "MAINTENANCE_UPDATE".equals(type)) {
+                        this.client.execute(this::refreshList);
+                    }
+                }
+            });
+        }
     }
 
     private void rebuildWidgets() {
@@ -354,6 +370,9 @@ public class TournamentListScreen extends Screen {
 
     @Override
     public void close() {
+        if (VaultOPMod.getInstance().getWebSocketManager() != null) {
+            VaultOPMod.getInstance().getWebSocketManager().setMessageListener(null);
+        }
         this.client.setScreen(this.parent);
     }
 }

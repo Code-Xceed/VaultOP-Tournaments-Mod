@@ -233,6 +233,12 @@ public class TournamentDetailScreen extends Screen {
                             });
                         }
                     }
+                    if ("TOURNAMENT_UPDATED".equals(type) && json.has("tournamentId") && !json.get("tournamentId").isJsonNull()) {
+                        String tId = json.get("tournamentId").getAsString();
+                        if (tId.equals(tournamentId)) {
+                            this.client.execute(this::fetchFreshStatus);
+                        }
+                    }
                 }
             });
         }
