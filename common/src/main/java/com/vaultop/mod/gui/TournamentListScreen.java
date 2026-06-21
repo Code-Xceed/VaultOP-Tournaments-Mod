@@ -263,9 +263,9 @@ public class TournamentListScreen extends Screen {
 
             // Hover state
             boolean isHovered = mouseX >= x && mouseX <= x + 180 && mouseY >= y && mouseY <= y + 170;
-            int bgColor = isHovered ? 0xFF252525 : 0xFF1E1E1E;
-            int highlightColor = isHovered ? 0xFF2196F3 : 0xFF3C3C3C;
-            int shadowColor = isHovered ? 0xFF0D2F4D : 0xFF0C0C0C;
+            int bgColor = isHovered ? 0xAA222222 : 0x660A0A0A;
+            int highlightColor = isHovered ? 0xFF3CC83C : 0xFF5A5A5A;
+            int shadowColor = isHovered ? 0xFF1B5E1B : 0xFF222222;
 
             // Draw Beveled 3D Card
             drawBeveledBox(context, x, y, 180, 170, bgColor, highlightColor, shadowColor);

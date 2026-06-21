@@ -26,6 +26,34 @@ public class DynamicTextureLoader {
             return null;
         }
         
+        if (url.startsWith("data:image")) {
+            if (LOADED_TEXTURES.containsKey(url)) {
+                return LOADED_TEXTURES.get(url);
+            }
+            
+            String cleanId = id.toLowerCase().replaceAll("[^a-z0-9_]", "_");
+            Identifier identifier = Identifier.of("vaultop", "tournament_thumb_" + cleanId);
+            LOADED_TEXTURES.put(url, identifier);
+
+            try {
+                int base64Comma = url.indexOf(",");
+                if (base64Comma != -1) {
+                    String base64Str = url.substring(base64Comma + 1);
+                    byte[] bytes = java.util.Base64.getDecoder().decode(base64Str);
+                    try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(bytes)) {
+                        NativeImage nativeImage = NativeImage.read(bais);
+                        MinecraftClient.getInstance().execute(() -> {
+                            NativeImageBackedTexture texture = new NativeImageBackedTexture(() -> "vaultop_dynamic_" + cleanId, nativeImage);
+                            MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, texture);
+                        });
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to decode base64 image: " + e.getMessage());
+            }
+            return identifier;
+        }
+        
         // Check if relative URL, if so prepend backend URL
         String fullUrl = url;
         if (url.startsWith("/")) {
