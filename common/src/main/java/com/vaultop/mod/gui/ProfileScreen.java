@@ -5,7 +5,9 @@ import com.vaultop.mod.VaultOPMod;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
 public class ProfileScreen extends Screen {
     private final Screen parent;
@@ -38,6 +40,13 @@ public class ProfileScreen extends Screen {
                     });
                     return null;
                 });
+    }
+
+    @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        Identifier bgTex = Identifier.of("vaultop", "textures/gui/mod_bg_image.png");
+        context.drawTexture(RenderLayer::getGuiTextured, bgTex, 0, 0, 0f, 0f, this.width, this.height, this.width, this.height);
+        context.fill(0, 0, this.width, this.height, 0xCC050505);
     }
 
     @Override

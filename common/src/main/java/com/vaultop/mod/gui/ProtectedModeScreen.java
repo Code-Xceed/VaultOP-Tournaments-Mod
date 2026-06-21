@@ -4,7 +4,9 @@ import com.vaultop.mod.protectedmode.ProtectedModeManager;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
 import java.util.List;
 
@@ -56,9 +58,15 @@ public class ProtectedModeScreen extends Screen {
     }
 
     @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        Identifier bgTex = Identifier.of("vaultop", "textures/gui/mod_bg_image.png");
+        context.drawTexture(RenderLayer::getGuiTextured, bgTex, 0, 0, 0f, 0f, this.width, this.height, this.width, this.height);
+        context.fill(0, 0, this.width, this.height, 0xAA440000);
+    }
+
+    @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Red tinted dark background
-        context.fill(0, 0, this.width, this.height, 0x99440000);
+        this.renderBackground(context, mouseX, mouseY, delta);
 
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("PROTECTED MODE VIOLATION"), this.width / 2, 20, 0xFF5555);
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Unapproved mod environment detected. Tournament server access locked."), this.width / 2, 40, 0xAAAAAA);

@@ -318,6 +318,13 @@ public class TournamentDetailScreen extends Screen {
     }
 
     @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        Identifier bgTex = Identifier.of("vaultop", "textures/gui/mod_bg_image.png");
+        context.drawTexture(RenderLayer::getGuiTextured, bgTex, 0, 0, 0f, 0f, this.width, this.height, this.width, this.height);
+        context.fill(0, 0, this.width, this.height, 0xCC050505);
+    }
+
+    @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderBackground(context, mouseX, mouseY, delta);
 
