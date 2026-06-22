@@ -120,27 +120,27 @@ public class ProfileScreen extends Screen {
             int leftW = (int) (panelW * 0.50) - 10;
             int leftH = panelH - 16;
 
-            int leftTopH = 68;
+            int leftTopH = 58;
             int leftBotY = leftY + leftTopH + 8;
             int leftBotH = leftH - leftTopH - 8;
 
             // Generate redirection view buttons for each registered event in the viewport
-            int eventY = leftBotY + 18 - rightScrollOffset;
+            int eventY = leftBotY + 22 - rightScrollOffset;
             int cardW = leftW - 16;
 
             for (JsonObject event : registeredEvents) {
                 int cardY = eventY;
-                boolean isBtnVisible = (cardY >= leftBotY + 14 && cardY + 28 <= leftBotY + leftBotH - 4);
+                boolean isBtnVisible = (cardY >= leftBotY + 18 && cardY + 36 <= leftBotY + leftBotH - 6);
                 
                 if (isBtnVisible) {
-                    int viewBtnX = leftX + 8 + cardW - 36;
-                    int viewBtnY = cardY + 6;
+                    int viewBtnX = leftX + 10 + cardW - 38;
+                    int viewBtnY = cardY + 10;
                     
-                    this.addDrawableChild(new PremiumButtonWidget(viewBtnX, viewBtnY, 30, 16, Text.literal("View"), button -> {
+                    this.addDrawableChild(new PremiumButtonWidget(viewBtnX, viewBtnY, 32, 16, Text.literal("View"), button -> {
                         this.client.setScreen(new TournamentDetailScreen(this, event));
                     }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
                 }
-                eventY += 34;
+                eventY += 42;
             }
         }
     }
@@ -157,13 +157,13 @@ public class ProfileScreen extends Screen {
         int leftW = (int) (panelW * 0.50) - 10;
         int leftH = panelH - 16;
 
-        int leftTopH = 68;
+        int leftTopH = 58;
         int leftBotY = leftY + leftTopH + 8;
         int leftBotH = leftH - leftTopH - 8;
 
         if (mouseX >= leftX && mouseX <= leftX + leftW && mouseY >= leftBotY && mouseY <= leftBotY + leftBotH) {
-            int scrollAreaH = leftBotH - 22;
-            int totalHeight = registeredEvents.size() * 34;
+            int scrollAreaH = leftBotH - 24;
+            int totalHeight = registeredEvents.size() * 42;
             int maxScroll = Math.max(0, totalHeight - scrollAreaH);
             if (verticalAmount != 0) {
                 rightScrollOffset -= (int) Math.signum(verticalAmount) * 15;
@@ -212,14 +212,12 @@ public class ProfileScreen extends Screen {
             String discordId = "N/A";
             String ign = "Not Linked";
             String accountType = "PREMIUM";
-            String role = "COMPETITOR";
 
             if (userObj != null) {
                 discordUser = userObj.has("username") ? userObj.get("username").getAsString() : "Unknown";
                 discordId = userObj.has("discordId") ? userObj.get("discordId").getAsString() : "N/A";
                 ign = userObj.has("ign") && !userObj.get("ign").isJsonNull() ? userObj.get("ign").getAsString() : "Not Linked";
                 accountType = userObj.has("accountType") && !userObj.get("accountType").isJsonNull() ? userObj.get("accountType").getAsString() : "PREMIUM";
-                role = userObj.has("role") && !userObj.get("role").isJsonNull() ? userObj.get("role").getAsString() : "COMPETITOR";
             }
 
             // Left Column layout: User Info & Registered Tournaments
@@ -228,7 +226,7 @@ public class ProfileScreen extends Screen {
             int leftW = (int) (panelW * 0.50) - 10;
             int leftH = panelH - 16;
 
-            int leftTopH = 68;
+            int leftTopH = 58;
             int leftBotY = leftY + leftTopH + 8;
             int leftBotH = leftH - leftTopH - 8;
 
@@ -236,9 +234,9 @@ public class ProfileScreen extends Screen {
             TournamentListScreen.drawPremiumBeveledBox(context, leftX, leftY, leftW, leftTopH, 0x8005080E, 0x20FFFFFF, 0x10FFFFFF);
 
             // Discord avatar rendering
-            int avatarX = leftX + 10;
-            int avatarY = leftY + 8;
-            int avatarSize = 24;
+            int avatarX = leftX + 14;
+            int avatarY = leftY + 15;
+            int avatarSize = 28;
             TournamentListScreen.drawPremiumBeveledBox(context, avatarX - 1, avatarY - 1, avatarSize + 2, avatarSize + 2, 0xFF050505, 0x40FFFFFF, 0x20FFFFFF);
 
             Identifier avatarTex = null;
@@ -259,52 +257,42 @@ public class ProfileScreen extends Screen {
                 context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(firstChar), avatarX + avatarSize / 2, avatarY + avatarSize / 2 - 4, 0xFFFFFF);
             }
 
-            // Username & Role badge
+            // Username (No role badge!)
             String truncatedName = discordUser;
-            if (this.textRenderer.getWidth(discordUser) > leftW - 100) {
-                truncatedName = this.textRenderer.trimToWidth(discordUser, leftW - 110) + "..";
+            if (this.textRenderer.getWidth(discordUser) > leftW / 2 - 58) {
+                truncatedName = this.textRenderer.trimToWidth(discordUser, leftW / 2 - 68) + "..";
             }
-            context.drawTextWithShadow(this.textRenderer, Text.literal("§f" + truncatedName), leftX + 38, leftY + 8, 0xFFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("§f" + truncatedName), leftX + 48, leftY + 25, 0xFFFFFF);
 
-            String formattedRole = getRoleBadgeText(role);
-            int badgeW = this.textRenderer.getWidth(formattedRole) + 6;
-            int badgeH = 10;
-            int badgeX = leftX + 38;
-            int badgeY = leftY + 18;
-            TournamentListScreen.drawPremiumBeveledBox(context, badgeX, badgeY, badgeW, badgeH, getRoleBadgeColor(role), getRoleBadgeBorderColor(role), getRoleBadgeBorderColor(role));
-            context.drawTextWithShadow(this.textRenderer, Text.literal(formattedRole), badgeX + 3, badgeY + 1, 0xFFFFFF);
+            // Stats rows on the right
+            int rightAlignX = leftX + leftW - 14;
+            int row1Y = leftY + 18;
+            int row2Y = leftY + 30;
 
-            // Double Column/Stats rows
-            int row1Y = leftY + 38;
-            int row2Y = leftY + 49;
-            int rightAlignX = leftX + leftW - 10;
-
-            // Row 1: Left = Discord tag, Right = Whitelist IGN (Mode)
-            context.drawTextWithShadow(this.textRenderer, Text.literal("§7Discord: §f" + truncatedName), leftX + 10, row1Y, 0xFFFFFF);
-            
+            // Row 1: IGN details
             String ignStr = "§7IGN: §f" + ign;
             if (!"Not Linked".equalsIgnoreCase(ign) && !ign.isEmpty()) {
                 ignStr += " §8(§b" + accountType.toLowerCase() + "§8)";
             }
             context.drawTextWithShadow(this.textRenderer, Text.literal(ignStr), rightAlignX - this.textRenderer.getWidth(ignStr), row1Y, 0xFFFFFF);
 
-            // Row 2: Left = Discord ID, Right = Status (CONNECTED)
-            context.drawTextWithShadow(this.textRenderer, Text.literal("§7ID: §9" + discordId), leftX + 10, row2Y, 0xFFFFFF);
-            context.drawTextWithShadow(this.textRenderer, Text.literal("§7Status: §aCONNECTED"), rightAlignX - this.textRenderer.getWidth("Status: CONNECTED"), row2Y, 0xFFFFFF);
+            // Row 2: Status
+            String statusStr = "§7Status: §aCONNECTED";
+            context.drawTextWithShadow(this.textRenderer, Text.literal(statusStr), rightAlignX - this.textRenderer.getWidth(statusStr), row2Y, 0xFFFFFF);
 
 
             // 2. Registered Tournaments Panel (Left Bottom)
             TournamentListScreen.drawPremiumBeveledBox(context, leftX, leftBotY, leftW, leftBotH, 0x8005080E, 0x2055FF55, 0x1055FF55);
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§a🏆 REGISTERED EVENTS (" + registeredEvents.size() + ")"), leftX + leftW / 2, leftBotY + 5, 0xFFFFFF);
-            context.fill(leftX + 8, leftBotY + 14, leftX + leftW - 8, leftBotY + 15, 0x20FFFFFF);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§a🏆 REGISTERED EVENTS (" + registeredEvents.size() + ")"), leftX + leftW / 2, leftBotY + 6, 0xFFFFFF);
+            context.fill(leftX + 8, leftBotY + 16, leftX + leftW - 8, leftBotY + 17, 0x20FFFFFF);
 
-            int scrollAreaH = leftBotH - 22;
+            int scrollAreaH = leftBotH - 24;
             if (!eventsLoadingStatus.isEmpty()) {
-                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§7" + eventsLoadingStatus), leftX + leftW / 2, leftBotY + 15 + scrollAreaH / 2 - 4, 0xFFFFFF);
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§7" + eventsLoadingStatus), leftX + leftW / 2, leftBotY + 18 + scrollAreaH / 2 - 4, 0xFFFFFF);
             } else {
-                context.enableScissor(leftX + 2, leftBotY + 15, leftX + leftW - 2, leftBotY + leftBotH - 4);
+                context.enableScissor(leftX + 2, leftBotY + 18, leftX + leftW - 2, leftBotY + leftBotH - 6);
 
-                int eventY = leftBotY + 18 - rightScrollOffset;
+                int eventY = leftBotY + 22 - rightScrollOffset;
                 int cardW = leftW - 16;
 
                 for (JsonObject event : registeredEvents) {
@@ -326,7 +314,7 @@ public class ProfileScreen extends Screen {
                     }
 
                     // Card background
-                    TournamentListScreen.drawPremiumBeveledBox(context, leftX + 8, eventY, cardW, 28, 0x40000000, 0x15FFFFFF, 0x0AFFFFFF);
+                    TournamentListScreen.drawPremiumBeveledBox(context, leftX + 10, eventY, cardW, 36, 0x40000000, 0x15FFFFFF, 0x0AFFFFFF);
 
                     // Name of Event
                     String displayName = name;
@@ -334,28 +322,28 @@ public class ProfileScreen extends Screen {
                     if (this.textRenderer.getWidth(name) > maxNameW) {
                         displayName = this.textRenderer.trimToWidth(name, maxNameW - 6) + "..";
                     }
-                    context.drawTextWithShadow(this.textRenderer, Text.literal("§f" + displayName), leftX + 12, eventY + 3, 0xFFFFFF);
-                    context.drawTextWithShadow(this.textRenderer, Text.literal("§bVer: " + gameVersion), leftX + 12, eventY + 13, 0xFFFFFF);
+                    context.drawTextWithShadow(this.textRenderer, Text.literal("§f" + displayName), leftX + 16, eventY + 6, 0xFFFFFF);
+                    context.drawTextWithShadow(this.textRenderer, Text.literal("§bVer: " + gameVersion), leftX + 16, eventY + 18, 0xFFFFFF);
 
                     // Draw status badge
                     int labelW = this.textRenderer.getWidth(formattedBadge) + 6;
                     int labelH = 10;
-                    int labelX = leftX + 8 + cardW - labelW - 40; // shift left to leave room for view button
-                    int labelYInside = eventY + 9;
+                    int labelX = leftX + 10 + cardW - labelW - 42; // shift left to leave room for view button
+                    int labelYInside = eventY + 12;
                     TournamentListScreen.drawPremiumBeveledBox(context, labelX, labelYInside, labelW, labelH, badgeBg, badgeBg * 2, badgeBg * 2);
                     context.drawTextWithShadow(this.textRenderer, Text.literal(formattedBadge), labelX + 3, labelYInside + 1, 0xFFFFFF);
 
-                    eventY += 34;
+                    eventY += 42;
                 }
 
                 context.disableScissor();
 
                 // Scrollbar
-                int totalHeight = registeredEvents.size() * 34;
+                int totalHeight = registeredEvents.size() * 42;
                 int maxScroll = Math.max(0, totalHeight - scrollAreaH);
                 if (maxScroll > 0) {
                     int scrollbarX = leftX + leftW - 6;
-                    int scrollbarY = leftBotY + 16;
+                    int scrollbarY = leftBotY + 18;
                     context.fill(scrollbarX, scrollbarY, scrollbarX + 2, scrollbarY + scrollAreaH, 0x22FFFFFF);
 
                     int thumbHeight = (scrollAreaH * scrollAreaH) / (scrollAreaH + maxScroll);
@@ -404,7 +392,7 @@ public class ProfileScreen extends Screen {
                 float skinScale = 1.4f;
                 int skinH = (int) (64 * skinScale);
                 int centerY = rightY + (rightH - skinH) / 2 + 10;
-                render25DCharacter(context, skinTex, rightX + rightW / 2, centerY, mouseX, mouseY, skinScale);
+                render25DCharacter(context, skinTex, rightX + rightW / 2, centerY, skinScale);
             }
         }
 
@@ -442,7 +430,7 @@ public class ProfileScreen extends Screen {
         }
     }
 
-    private void render25DCharacter(DrawContext context, Identifier skinTex, int centerX, int centerY, int mouseX, int mouseY, float scale) {
+    private void render25DCharacter(DrawContext context, Identifier skinTex, int centerX, int centerY, float scale) {
         float tick = System.currentTimeMillis() / 50.0f;
 
         // Dimensions based on scale
@@ -460,59 +448,43 @@ public class ProfileScreen extends Screen {
         float cycle = (float) Math.sin(tick * 0.15f);
         int armLegSwingY = (int) (cycle * 3.0f * scale);
 
-        // Head looking tracking calculations
-        int headCX = centerX;
-        int headCY = centerY + headSz / 2;
-
-        double dx = mouseX - headCX;
-        double dy = mouseY - headCY;
-        double len = Math.sqrt(dx * dx + dy * dy);
-        float hox = 0;
-        float hoy = 0;
-        if (len > 0.1) {
-            hox = (float) (dx / len) * Math.min(2.5f * scale, (float) len * 0.03f * scale);
-            hoy = (float) (dy / len) * Math.min(1.8f * scale, (float) len * 0.03f * scale);
-        }
-
         // Draw parts step by step (back to front order)
 
-        // 1. Right Leg & Pants Overlay
+        // 1. Right Leg & Pants Overlay (Base: u=4, v=20, sw=4, sh=12; Overlay: u=4, v=36, sw=4, sh=12)
         int rly = ty + torsoH + Math.abs(armLegSwingY) / 2;
         int rlx = tx - armLegSwingY / 2;
-        drawSkinPart(context, skinTex, rlx, rly, limbW, limbH, 4, 20);
-        drawSkinPart(context, skinTex, rlx, rly, limbW, limbH, 4, 36);
+        drawSkinPart(context, skinTex, rlx, rly, limbW, limbH, 4, 20, 4, 12);
+        drawSkinPart(context, skinTex, rlx, rly, limbW, limbH, 4, 36, 4, 12);
 
-        // 2. Left Leg & Pants Overlay
+        // 2. Left Leg & Pants Overlay (Base: u=20, v=52, sw=4, sh=12; Overlay: u=4, v=52, sw=4, sh=12)
         int lly = ty + torsoH + Math.abs(armLegSwingY) / 2;
         int llx = tx + torsoW / 2 + armLegSwingY / 2;
-        drawSkinPart(context, skinTex, llx, lly, limbW, limbH, 20, 52);
-        drawSkinPart(context, skinTex, llx, lly, limbW, limbH, 4, 52);
+        drawSkinPart(context, skinTex, llx, lly, limbW, limbH, 20, 52, 4, 12);
+        drawSkinPart(context, skinTex, llx, lly, limbW, limbH, 4, 52, 4, 12);
 
-        // 3. Torso & Jacket Overlay
-        drawSkinPart(context, skinTex, tx, ty, torsoW, torsoH, 20, 20);
-        drawSkinPart(context, skinTex, tx, ty, torsoW, torsoH, 20, 36);
+        // 3. Torso & Jacket Overlay (Base: u=20, v=20, sw=8, sh=12; Overlay: u=20, v=36, sw=8, sh=12)
+        drawSkinPart(context, skinTex, tx, ty, torsoW, torsoH, 20, 20, 8, 12);
+        drawSkinPart(context, skinTex, tx, ty, torsoW, torsoH, 20, 36, 8, 12);
 
-        // 4. Right Arm & Sleeve Overlay
+        // 4. Right Arm & Sleeve Overlay (Base: u=44, v=20, sw=4, sh=12; Overlay: u=44, v=36, sw=4, sh=12)
         int ray = ty + Math.abs(armLegSwingY) / 2;
         int rax = tx - limbW + armLegSwingY / 2;
-        drawSkinPart(context, skinTex, rax, ray, limbW, limbH, 44, 20);
-        drawSkinPart(context, skinTex, rax, ray, limbW, limbH, 44, 36);
+        drawSkinPart(context, skinTex, rax, ray, limbW, limbH, 44, 20, 4, 12);
+        drawSkinPart(context, skinTex, rax, ray, limbW, limbH, 44, 36, 4, 12);
 
-        // 5. Left Arm & Sleeve Overlay
+        // 5. Left Arm & Sleeve Overlay (Base: u=36, v=52, sw=4, sh=12; Overlay: u=52, v=52, sw=4, sh=12)
         int lay = ty + Math.abs(armLegSwingY) / 2;
         int lax = tx + torsoW - armLegSwingY / 2;
-        drawSkinPart(context, skinTex, lax, lay, limbW, limbH, 36, 52);
-        drawSkinPart(context, skinTex, lax, lay, limbW, limbH, 52, 52);
+        drawSkinPart(context, skinTex, lax, lay, limbW, limbH, 36, 52, 4, 12);
+        drawSkinPart(context, skinTex, lax, lay, limbW, limbH, 52, 52, 4, 12);
 
-        // 6. Head & Hat Overlay
-        int hx = tx + (int) hox;
-        int hy = centerY + (int) hoy;
-        drawSkinPart(context, skinTex, hx, hy, headSz, headSz, 8, 8);
-        drawSkinPart(context, skinTex, hx, hy, headSz, headSz, 40, 8);
+        // 6. Head & Hat Overlay (Base: u=8, v=8, sw=8, sh=8; Overlay: u=40, v=8, sw=8, sh=8)
+        drawSkinPart(context, skinTex, tx, centerY, headSz, headSz, 8, 8, 8, 8);
+        drawSkinPart(context, skinTex, tx, centerY, headSz, headSz, 40, 8, 8, 8);
     }
 
-    private void drawSkinPart(DrawContext context, Identifier skinTex, int dx, int dy, int dw, int dh, int u, int v) {
-        context.drawTexture(RenderLayer::getGuiTextured, skinTex, dx, dy, u, v, dw, dh, 64, 64);
+    private void drawSkinPart(DrawContext context, Identifier skinTex, int dx, int dy, int dw, int dh, int u, int v, int sw, int sh) {
+        context.drawTexture(RenderLayer::getGuiTextured, skinTex, dx, dy, (float) u, (float) v, dw, dh, sw, sh, 64, 64);
     }
 
     @Override
