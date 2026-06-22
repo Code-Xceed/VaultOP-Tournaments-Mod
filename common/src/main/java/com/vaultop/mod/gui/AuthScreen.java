@@ -26,8 +26,8 @@ public class AuthScreen extends Screen {
     private String statusText = "Ready to Authenticate";
     private String codeText = "";
     private boolean isWaiting = false;
-    private ButtonWidget authButton;
-    private ButtonWidget cancelButton;
+    private PremiumButtonWidget authButton;
+    private PremiumButtonWidget cancelButton;
 
     public AuthScreen(Screen parent) {
         super(Text.literal("VaultOP Authentication"));
@@ -42,15 +42,11 @@ public class AuthScreen extends Screen {
         int y = this.height / 2 + 10;
 
         // Create Authenticate Button
-        this.authButton = ButtonWidget.builder(Text.literal("Authenticate"), button -> startAuthFlow())
-                .dimensions(x, y, width, height)
-                .build();
+        this.authButton = new PremiumButtonWidget(x, y, width, height, Text.literal("Authenticate"), button -> startAuthFlow(), 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3);
         this.addDrawableChild(this.authButton);
 
         // Create Cancel/Back Button
-        this.cancelButton = ButtonWidget.builder(Text.literal("Cancel"), button -> close())
-                .dimensions(x, y + 24, width, height)
-                .build();
+        this.cancelButton = new PremiumButtonWidget(x, y + 24, width, height, Text.literal("Cancel"), button -> close(), 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3);
         this.addDrawableChild(this.cancelButton);
     }
 
@@ -143,7 +139,7 @@ public class AuthScreen extends Screen {
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
         Identifier bgTex = Identifier.of("vaultop", "textures/gui/mod_bg_image.png");
         context.drawTexture(RenderLayer::getGuiTextured, bgTex, 0, 0, 0f, 0f, this.width, this.height, this.width, this.height);
-        context.fill(0, 0, this.width, this.height, 0xCC050505);
+        context.fill(0, 0, this.width, this.height, 0x80050505);
     }
 
     @Override

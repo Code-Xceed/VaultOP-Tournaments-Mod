@@ -11,13 +11,20 @@ public class TrophyButtonWidget extends ButtonWidget {
 
     @Override
     protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Draw the standard button background/border
-        super.renderWidget(context, mouseX, mouseY, delta);
+        if (!this.visible) return;
+
+        boolean hovered = this.isSelected() || (mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= this.getY() && mouseY <= this.getY() + this.height);
+        
+        int bgColor = hovered ? 0xFF2A2A2A : 0xFF1E1E1E;
+        int hl = hovered ? 0xFFFFD700 : 0xFF3C464F;
+        int sh = hovered ? 0xFFB8860B : 0xFF0C0C0C;
+
+        TournamentListScreen.drawPremiumBeveledBox(context, this.getX(), this.getY(), this.width, this.height, bgColor, hl, sh);
         
         int cx = this.getX() + 10;
         int cy = this.getY() + 10;
-        int gold = 0xFFFFD700;
-        int darkGold = 0xFFB8860B;
+        int gold = hovered ? 0xFFFFFFFF : 0xFFFFD700;
+        int darkGold = hovered ? 0xFFAAAAAA : 0xFFB8860B;
 
         // Draw pixel trophy cup icon
         // Cup bowl

@@ -24,29 +24,29 @@ public class HomeScreen extends Screen {
         int x = 20;
         int startY = this.height - 80;
         
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("Tournaments"), button -> {
+        this.addDrawableChild(new PremiumButtonWidget(x, startY, buttonWidth, buttonHeight, Text.literal("Tournaments"), button -> {
             this.client.setScreen(new TournamentListScreen(this));
-        }).dimensions(x, startY, buttonWidth, buttonHeight).build());
+        }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("Profile"), button -> {
+        this.addDrawableChild(new PremiumButtonWidget(x, startY + 24, buttonWidth, buttonHeight, Text.literal("Profile"), button -> {
             this.client.setScreen(new ProfileScreen(this));
-        }).dimensions(x, startY + 24, buttonWidth, buttonHeight).build());
+        }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("Leaderboard"), button -> {
+        this.addDrawableChild(new PremiumButtonWidget(x, startY + 48, buttonWidth, buttonHeight, Text.literal("Leaderboard"), button -> {
             this.client.setScreen(new LeaderboardScreen(this));
-        }).dimensions(x, startY + 48, buttonWidth, buttonHeight).build());
+        }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
 
         // Back button in top-left
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("Back"), button -> {
+        this.addDrawableChild(new PremiumButtonWidget(10, 10, 50, 20, Text.literal("Back"), button -> {
             this.client.setScreen(this.parent);
-        }).dimensions(10, 10, 50, 20).build());
+        }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
     }
 
     @Override
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
         Identifier bgTex = Identifier.of("vaultop", "textures/gui/mod_bg_image.png");
         context.drawTexture(RenderLayer::getGuiTextured, bgTex, 0, 0, 0f, 0f, this.width, this.height, this.width, this.height);
-        context.fill(0, 0, this.width, this.height, 0xCC050505);
+        context.fill(0, 0, this.width, this.height, 0x80050505);
     }
 
     @Override

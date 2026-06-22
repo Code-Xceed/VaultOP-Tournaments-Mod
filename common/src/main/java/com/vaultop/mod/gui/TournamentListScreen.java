@@ -44,6 +44,79 @@ public class TournamentListScreen extends Screen {
         drawPremiumBeveledBox(context, x, y, w, h, bgColor, highlightColor, shadowColor);
     }
 
+    public static void drawAnimatedStatusThumbnail(DrawContext context, int x, int y, int w, int h, String status, Identifier customThumb, net.minecraft.client.font.TextRenderer textRenderer) {
+        long time = System.currentTimeMillis();
+        int color1, color2;
+        String badgeText;
+        int badgeColor;
+        
+        if ("ONGOING".equals(status)) {
+            float pulse = (float) (Math.sin(time * 0.005) + 1.0) / 2.0f;
+            int redVal1 = (int) (40 + pulse * 25);
+            int redVal2 = (int) (120 + pulse * 45);
+            color1 = 0xFF000000 | (redVal1 << 16);
+            color2 = 0xFF000000 | (redVal2 << 16) | (12 << 8) | 12;
+            badgeText = "🔴 LIVE";
+            badgeColor = 0xFFFF3333;
+        } else if ("REG_OPEN".equals(status)) {
+            color1 = 0xFF021727;
+            color2 = 0xFF006F7C;
+            badgeText = "🟢 OPEN";
+            badgeColor = 0xFF22FFBB;
+        } else if ("REG_CLOSED".equals(status)) {
+            color1 = 0xFF211303;
+            color2 = 0xFF5B3005;
+            badgeText = "🔒 CLOSED";
+            badgeColor = 0xFFFF9922;
+        } else {
+            color1 = 0xFF121212;
+            color2 = 0xFF292929;
+            badgeText = "🏆 COMPLETED";
+            badgeColor = 0xFFAAAAAA;
+        }
+        
+        if (customThumb != null) {
+            context.drawTexture(RenderLayer::getGuiTextured, customThumb, x, y, 0f, 0f, w, h, w, h);
+            context.draw();
+        } else {
+            int slices = 15;
+            for (int slice = 0; slice < slices; slice++) {
+                int sx1 = x + (slice * w) / slices;
+                int sx2 = x + ((slice + 1) * w) / slices;
+                float offset = (float) slice / slices;
+                
+                float wave;
+                if ("ONGOING".equals(status) || "REG_OPEN".equals(status) || "REG_CLOSED".equals(status)) {
+                    wave = (float) (Math.sin(time * 0.003 - offset * 4.0) + 1.0) / 2.0f;
+                } else {
+                    wave = 0.5f;
+                }
+                
+                int r = (int) (((color1 >> 16) & 0xFF) * (1.0f - wave) + ((color2 >> 16) & 0xFF) * wave);
+                int g = (int) (((color1 >> 8) & 0xFF) * (1.0f - wave) + ((color2 >> 8) & 0xFF) * wave);
+                int b = (int) ((color1 & 0xFF) * (1.0f - wave) + (color2 & 0xFF) * wave);
+                int sliceColor = 0xFF000000 | (r << 16) | (g << 8) | b;
+                
+                context.fill(sx1, y, sx2, y + h, sliceColor);
+            }
+        }
+        
+        context.fill(x, y, x + w, y + 1, 0x33FFFFFF);
+        context.fill(x, y + h - 1, x + w, y + h, 0x11FFFFFF);
+        
+        int boxW = w - 16;
+        int boxH = 16;
+        int boxX = x + 8;
+        int boxY = y + h/2 - boxH/2;
+        context.fill(boxX, boxY, boxX + boxW, boxY + boxH, 0x90000000);
+        
+        float textPulse = (float) (Math.sin(time * 0.006) + 1.0) / 2.0f;
+        int alpha = (int) (180 + textPulse * 75);
+        int finalBadgeColor = (alpha << 24) | (badgeColor & 0xFFFFFF);
+        
+        context.drawCenteredTextWithShadow(textRenderer, Text.literal(badgeText), x + w/2, boxY + 4, finalBadgeColor);
+    }
+
     public static void drawPremiumBeveledBox(DrawContext context, int x, int y, int w, int h, int bgColor, int highlightColor, int shadowColor) {
         if (bgColor != 0) {
             context.fill(x + 2, y + 2, x + w - 2, y + h - 2, bgColor);
@@ -214,8 +287,12 @@ public class TournamentListScreen extends Screen {
     @Override
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
         Identifier bgTex = Identifier.of("vaultop", "textures/gui/mod_bg_image.png");
+        context.getMatrices().push();
+        context.getMatrices().translate(0.0f, 0.0f, -100.0f);
         context.drawTexture(RenderLayer::getGuiTextured, bgTex, 0, 0, 0f, 0f, this.width, this.height, this.width, this.height);
-        context.fill(0, 0, this.width, this.height, 0xCC050505);
+        context.getMatrices().pop();
+        context.draw();
+        context.fill(RenderLayer.getGui(), 0, 0, this.width, this.height, -50, 0x80050505);
     }
 
     @Override
@@ -223,13 +300,13 @@ public class TournamentListScreen extends Screen {
         this.renderBackground(context, mouseX, mouseY, delta);
 
         // 1. Draw Top Header Panel (Height = 40) with double bevel
-        drawPremiumBeveledBox(context, 0, -2, this.width, 42, 0xFF121212, 0xFF3C464F, 0xFF0C0C0C);
+        drawPremiumBeveledBox(context, 0, -2, this.width, 42, 0xD00A0F18, 0x25FFFFFF, 0x10FFFFFF);
         
         // Brand logo in left corner
         context.drawTextWithShadow(this.textRenderer, Text.literal("VaultOP Esports"), 15, 16, 0xFFFFD700);
 
         // Draw premium bevel box around the search field text input (at this.width / 2 - 75, 10, 150, 20)
-        drawPremiumBeveledBox(context, this.width / 2 - 77, 9, 154, 22, 0xFF050709, 0xFF1D2933, 0xFF0A1015);
+        drawPremiumBeveledBox(context, this.width / 2 - 77, 9, 154, 22, 0x8005080E, 0x30FFFFFF, 0x15FFFFFF);
 
         // 2. Draw Cards
         if (!statusText.isEmpty()) {
@@ -263,89 +340,77 @@ public class TournamentListScreen extends Screen {
 
             // Hover state
             boolean isHovered = mouseX >= x && mouseX <= x + 180 && mouseY >= y && mouseY <= y + 170;
-            int bgColor = isHovered ? 0xD01E2E1E : 0xB0181818;
-            int highlightColor = isHovered ? 0xFF3CC83C : 0xFF707070;
-            int shadowColor = isHovered ? 0xFF1D5A1D : 0xFF3A3A3A;
+            int bgColor = isHovered ? 0xCF121B2A : 0x8F080C14;
+            int highlightColor = isHovered ? 0xFF2196F3 : 0x30FFFFFF;
+            int shadowColor = isHovered ? 0x802196F3 : 0x15FFFFFF;
 
-            // Draw Beveled 3D Card
+            // Draw Beveled 3D Card (Actual solid card design, not floating)
             drawBeveledBox(context, x, y, 180, 170, bgColor, highlightColor, shadowColor);
-
-            // Left status indicator bar inside the card
-            int indicatorColor = 0xFF888888;
-            if ("APPROVED".equals(uStatus)) {
-                indicatorColor = 0xFF4CAF50;
-            } else if ("PENDING".equals(uStatus)) {
-                indicatorColor = 0xFFFF9800;
-            } else if ("REJECTED".equals(uStatus)) {
-                indicatorColor = 0xFFF44336;
-            } else {
-                if ("ONGOING".equals(status)) {
-                    indicatorColor = 0xFFF44336;
-                } else if ("REG_OPEN".equals(status)) {
-                    indicatorColor = 0xFF2196F3;
-                }
-            }
-            context.fill(x + 3, y + 4, x + 6, y + 166, indicatorColor);
 
             // Thumbnail Image Box
             int thumbX = x + 10;
             int thumbY = y + 8;
             int thumbW = 160;
-            int thumbH = 90;
+            int thumbH = 76;
 
-            // Draw background of thumbnail placeholder
-            context.fill(thumbX, thumbY, thumbX + thumbW, thumbY + thumbH, 0xFF050709);
-
+            // Preload image in background cache
             String thumbUrl = t.has("thumbnailUrl") && !t.get("thumbnailUrl").isJsonNull() ? t.get("thumbnailUrl").getAsString() : "";
-            Identifier thumbTex = null;
+            String tourneyId = t.has("id") && !t.get("id").isJsonNull() ? t.get("id").getAsString() : "unknown";
+            Identifier customThumb = null;
             if (!thumbUrl.isEmpty()) {
-                String tourneyId = t.has("id") && !t.get("id").isJsonNull() ? t.get("id").getAsString() : "unknown";
-                thumbTex = DynamicTextureLoader.getOrLoad(thumbUrl, tourneyId);
+                customThumb = DynamicTextureLoader.getOrLoad(thumbUrl, tourneyId);
             }
 
-            if (thumbTex != null) {
-                context.drawTexture(RenderLayer::getGuiTextured, thumbTex, thumbX, thumbY, 0.0f, 0.0f, thumbW, thumbH, thumbW, thumbH);
-            } else {
-                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("VAULTOP"), thumbX + thumbW / 2, thumbY + thumbH / 2 - 4, 0x44FFFFFF);
-            }
+            // Draw dynamic animated status thumbnail
+            drawAnimatedStatusThumbnail(context, thumbX, thumbY, thumbW, thumbH, status, customThumb, this.textRenderer);
 
-            // Status badge text
-            String statusBadgeText = "🔒 COMPLETED";
-            int badgeColor = 0xFF888888;
-            if ("ONGOING".equals(status)) {
-                statusBadgeText = "🔴 LIVE";
-                badgeColor = 0xFFF44336;
-            } else if ("REG_OPEN".equals(status)) {
-                statusBadgeText = "🟢 UPCOMING (REG OPEN)";
-                badgeColor = 0xFF4CAF50;
-            } else if ("REG_CLOSED".equals(status)) {
-                statusBadgeText = "🔒 UPCOMING (REG CLOSED)";
-                badgeColor = 0xFFFFB300;
-            } else if ("COMPLETED".equals(status)) {
-                statusBadgeText = "🔒 COMPLETED";
-                badgeColor = 0xFF888888;
-            }
-            // Draw overlay background for badge readability
-            int textW = this.textRenderer.getWidth(statusBadgeText);
-            context.fill(thumbX + 4, thumbY + 4, thumbX + 8 + textW, thumbY + 14, 0xAA000000);
-            context.drawTextWithShadow(this.textRenderer, Text.literal(statusBadgeText), thumbX + 6, thumbY + 5, badgeColor);
-
-            // Truncate name
+            // Truncate name considering larger font
             String displayTitle = name;
+            float titleScale = 1.15f;
+            int maxTitleWidth = (int) (156 / titleScale);
             if (this.textRenderer.getWidth(displayTitle) > 156) {
-                displayTitle = this.textRenderer.trimToWidth(displayTitle, 148) + "...";
+                displayTitle = this.textRenderer.trimToWidth(displayTitle, maxTitleWidth - 4) + "...";
             }
-            context.drawTextWithShadow(this.textRenderer, Text.literal(displayTitle), x + 12, y + 104, isHovered ? 0xFF55FFFF : 0xFFFFFFFF);
+            
+            context.getMatrices().push();
+            context.getMatrices().scale(titleScale, titleScale, 1.0f);
+            int tx = (int) ((x + 12) / titleScale);
+            int ty = (int) ((y + 90) / titleScale);
+            context.drawTextWithShadow(this.textRenderer, Text.literal(displayTitle), tx, ty, isHovered ? 0xFF55FFFF : 0xFFFFFFFF);
+            context.getMatrices().pop();
 
-            // Metadata info
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Ver: " + gameVersion + " | Pool: " + prizePool), x + 12, y + 116, 0x999999);
+            // Metadata info: Combined on a single line with colorful text elements!
+            int currentX = x + 12;
+            context.drawTextWithShadow(this.textRenderer, Text.literal("🎮 "), currentX, y + 106, 0xFF55FFFF); // Cyan controller
+            currentX += this.textRenderer.getWidth("🎮 ");
+            context.drawTextWithShadow(this.textRenderer, Text.literal(gameVersion), currentX, y + 106, 0xFF55FFFF); // Cyan version
+            currentX += this.textRenderer.getWidth(gameVersion);
+            context.drawTextWithShadow(this.textRenderer, Text.literal(" | "), currentX, y + 106, 0x999999);
+            currentX += this.textRenderer.getWidth(" | ");
+            context.drawTextWithShadow(this.textRenderer, Text.literal("🏆 "), currentX, y + 106, 0xFFFFD700); // Gold trophy
+            currentX += this.textRenderer.getWidth("🏆 ");
+            context.drawTextWithShadow(this.textRenderer, Text.literal(prizePool), currentX, y + 106, 0xFFFFD700); // Gold prize pool
 
-            // User status badge
-            int userBadgeColor = 0xFF888888;
-            if ("APPROVED".equals(uStatus)) userBadgeColor = 0xFF4CAF50;
-            else if ("PENDING".equals(uStatus)) userBadgeColor = 0xFFFF9800;
-            else if ("REJECTED".equals(uStatus)) userBadgeColor = 0xFFF44336;
-            context.drawTextWithShadow(this.textRenderer, Text.literal("STATUS: " + label.toUpperCase()), x + 12, y + 128, userBadgeColor);
+            // User status badge pill: Shifted to y + 120 (so it doesn't overlap the View Info button!)
+            int badgeY = y + 120;
+            int badgeW = 160;
+            int badgeH = 16;
+            
+            int badgeColor;
+            if ("APPROVED".equals(uStatus)) {
+                badgeColor = 0xFF4CAF50; // Green
+            } else if ("PENDING".equals(uStatus)) {
+                badgeColor = 0xFFFFB300; // Orange-gold
+            } else if ("REJECTED".equals(uStatus)) {
+                badgeColor = 0xFFF44336; // Red
+            } else {
+                badgeColor = 0xFFF44336; // Not registered - Red
+            }
+            
+            int badgeBg = (0x33 << 24) | (badgeColor & 0xFFFFFF);
+            int badgeBorder = (0x80 << 24) | (badgeColor & 0xFFFFFF);
+            drawPremiumBeveledBox(context, x + 10, badgeY, badgeW, badgeH, badgeBg, badgeBorder, badgeBorder);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(label.toUpperCase()), x + 10 + badgeW / 2, badgeY + 4, badgeColor);
         }
 
         // Draw scrollbar if needed

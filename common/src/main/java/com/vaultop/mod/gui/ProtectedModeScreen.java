@@ -28,13 +28,9 @@ public class ProtectedModeScreen extends Screen {
         int x = this.width / 2 - 100;
         int y = this.height - 40;
 
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("Re-Verify"), button -> reVerify())
-                .dimensions(x, y, 98, 20)
-                .build());
+        this.addDrawableChild(new PremiumButtonWidget(x, y, 98, 20, Text.literal("Re-Verify"), button -> reVerify(), 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
 
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("Cancel"), button -> close())
-                .dimensions(x + 102, y, 98, 20)
-                .build());
+        this.addDrawableChild(new PremiumButtonWidget(x + 102, y, 98, 20, Text.literal("Cancel"), button -> close(), 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
     }
 
     private void reVerify() {
@@ -61,7 +57,9 @@ public class ProtectedModeScreen extends Screen {
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
         Identifier bgTex = Identifier.of("vaultop", "textures/gui/mod_bg_image.png");
         context.drawTexture(RenderLayer::getGuiTextured, bgTex, 0, 0, 0f, 0f, this.width, this.height, this.width, this.height);
-        context.fill(0, 0, this.width, this.height, 0xAA440000);
+        context.draw();
+        context.fill(0, 0, this.width, this.height, 0x77440000);
+        context.draw();
     }
 
     @Override

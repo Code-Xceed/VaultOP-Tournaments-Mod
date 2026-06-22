@@ -21,9 +21,7 @@ public class ProfileScreen extends Screen {
 
     @Override
     protected void init() {
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("Back"), button -> close())
-                .dimensions(10, 10, 50, 20)
-                .build());
+        this.addDrawableChild(new PremiumButtonWidget(10, 10, 50, 20, Text.literal("Back"), button -> close(), 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
 
         // Fetch user profile
         String token = VaultOPMod.getInstance().getSessionManager().getSessionToken();
@@ -46,7 +44,7 @@ public class ProfileScreen extends Screen {
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
         Identifier bgTex = Identifier.of("vaultop", "textures/gui/mod_bg_image.png");
         context.drawTexture(RenderLayer::getGuiTextured, bgTex, 0, 0, 0f, 0f, this.width, this.height, this.width, this.height);
-        context.fill(0, 0, this.width, this.height, 0xCC050505);
+        context.fill(0, 0, this.width, this.height, 0x80050505);
     }
 
     @Override

@@ -15,6 +15,9 @@
   "entrypoints": {
     "main": [
       "com.codex.vaultop_tournaments.ExampleModFabric"
+    ],
+    "preLaunch": [
+      "com.codex.vaultop_tournaments.ProtectedModePreLaunch"
     ]
   },
   "mixins": [

@@ -26,9 +26,7 @@ public class LeaderboardScreen extends Screen {
 
     @Override
     protected void init() {
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("Back"), button -> close())
-                .dimensions(10, 10, 50, 20)
-                .build());
+        this.addDrawableChild(new PremiumButtonWidget(10, 10, 50, 20, Text.literal("Back"), button -> close(), 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
 
         // Fetch tournaments and filter completed ones
         VaultOPMod.getInstance().getRestClient().fetchTournaments()
@@ -62,9 +60,7 @@ public class LeaderboardScreen extends Screen {
     private void rebuildWidgets() {
         this.clearChildren(); // rebuild screen layout
 
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("Back"), button -> close())
-                .dimensions(10, 10, 50, 20)
-                .build());
+        this.addDrawableChild(new PremiumButtonWidget(10, 10, 50, 20, Text.literal("Back"), button -> close(), 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
 
         // Draw buttons for completed tournaments on the left side
         int startY = 50;
@@ -74,9 +70,9 @@ public class LeaderboardScreen extends Screen {
             if (name.length() > 18) {
                 name = name.substring(0, 15) + "...";
             }
-            this.addDrawableChild(ButtonWidget.builder(Text.literal(name), button -> {
+            this.addDrawableChild(new PremiumButtonWidget(10, startY + (i * 24), 100, 20, Text.literal(name), button -> {
                 selectedTournament = t;
-            }).dimensions(10, startY + (i * 24), 100, 20).build());
+            }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
         }
     }
 
@@ -84,7 +80,7 @@ public class LeaderboardScreen extends Screen {
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
         Identifier bgTex = Identifier.of("vaultop", "textures/gui/mod_bg_image.png");
         context.drawTexture(RenderLayer::getGuiTextured, bgTex, 0, 0, 0f, 0f, this.width, this.height, this.width, this.height);
-        context.fill(0, 0, this.width, this.height, 0xCC050505);
+        context.fill(0, 0, this.width, this.height, 0x80050505);
     }
 
     @Override

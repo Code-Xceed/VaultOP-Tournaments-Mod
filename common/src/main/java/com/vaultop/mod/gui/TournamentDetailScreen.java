@@ -326,8 +326,12 @@ public class TournamentDetailScreen extends Screen {
     @Override
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
         Identifier bgTex = Identifier.of("vaultop", "textures/gui/mod_bg_image.png");
+        context.getMatrices().push();
+        context.getMatrices().translate(0.0f, 0.0f, -100.0f);
         context.drawTexture(RenderLayer::getGuiTextured, bgTex, 0, 0, 0f, 0f, this.width, this.height, this.width, this.height);
-        context.fill(0, 0, this.width, this.height, 0xCC050505);
+        context.getMatrices().pop();
+        context.draw();
+        context.fill(RenderLayer.getGui(), 0, 0, this.width, this.height, -50, 0x80050505);
     }
 
     @Override
@@ -342,82 +346,109 @@ public class TournamentDetailScreen extends Screen {
         String date = tournament.has("date") && !tournament.get("date").isJsonNull() ? tournament.get("date").getAsString() : "TBD";
 
         // Draw header panel
-        TournamentListScreen.drawPremiumBeveledBox(context, 0, -2, this.width, 37, 0xFF181818, 0xFF3C464F, 0xFF0C0C0C);
+        TournamentListScreen.drawPremiumBeveledBox(context, 0, -2, this.width, 37, 0xD00A0F18, 0x25FFFFFF, 0x10FFFFFF);
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(name), this.width / 2, 12, 0xFFFFFF);
 
         // 1. Draw Giant Esports Banner Card at top
-        TournamentListScreen.drawPremiumBeveledBox(context, 20, 45, this.width - 40, 60, 0xEE0B0F14, 0xFF2196F3, 0xFF0D2F4D);
+        TournamentListScreen.drawPremiumBeveledBox(context, 20, 45, this.width - 40, 60, 0xBF080C14, 0x802196F3, 0x402196F3);
 
+        // Retrieve custom thumbnail if available
         String thumbUrl = tournament.has("thumbnailUrl") && !tournament.get("thumbnailUrl").isJsonNull() ? tournament.get("thumbnailUrl").getAsString() : "";
-        int textX = 30;
+        Identifier customThumb = null;
         if (!thumbUrl.isEmpty()) {
-            String tourneyId = tournament.has("id") && !tournament.get("id").isJsonNull() ? tournament.get("id").getAsString() : "unknown";
-            Identifier thumbTex = DynamicTextureLoader.getOrLoad(thumbUrl, tourneyId);
-            if (thumbTex != null) {
-                // Draw 16:9 Thumbnail image on the left of the banner
-                context.drawTexture(RenderLayer::getGuiTextured, thumbTex, 22, 47, 0.0f, 0.0f, 106, 56, 106, 56);
-                // Vertical divider line separating thumbnail and details
-                context.fill(132, 47, 133, 103, 0xFF3C3C3C);
-                textX = 140;
-            }
+            customThumb = DynamicTextureLoader.getOrLoad(thumbUrl, tournamentId);
         }
-        
+
+        // 1. Draw 16:9 Animated Status Thumbnail on the left of the banner
+        TournamentListScreen.drawAnimatedStatusThumbnail(context, 22, 47, 106, 56, status, customThumb, this.textRenderer);
+        // Vertical divider line separating thumbnail and details
+        context.fill(132, 47, 133, 103, 0x33FFFFFF);
+        int textX = 140;
+
         // Name inside banner
         context.drawTextWithShadow(this.textRenderer, Text.literal(name.toUpperCase()), textX, 53, 0xFFFFD700);
 
-        // Status Badge inside banner
-        String statusBadgeText = "🔒 CLOSED";
+        // Draw the Event Date (moved up to y=70 to replace removed status badge below the title)
+        context.drawTextWithShadow(this.textRenderer, Text.literal("Event Date: " + date), textX, 70, 0xFF888888);
+
+        // Giant countdown / status box on the right side of the banner (Pulsing high-tech design)
+        long time = System.currentTimeMillis();
+        double pulseSin = Math.sin(time * 0.005);
+        double pulseVal = (pulseSin + 1.0) / 2.0; // 0.0 to 1.0
+
         int badgeColor = 0xFF888888;
         if ("ONGOING".equals(status)) {
-            statusBadgeText = "🔴 LIVE";
             badgeColor = 0xFFF44336;
         } else if ("REG_OPEN".equals(status)) {
-            statusBadgeText = "🟢 UPCOMING (REG OPEN)";
             badgeColor = 0xFF4CAF50;
         } else if ("REG_CLOSED".equals(status)) {
-            statusBadgeText = "🔒 UPCOMING (REG CLOSED)";
             badgeColor = 0xFFFFB300;
-        } else if ("COMPLETED".equals(status)) {
-            statusBadgeText = "🔒 COMPLETED";
-            badgeColor = 0xFF888888;
         }
-        context.drawTextWithShadow(this.textRenderer, Text.literal(statusBadgeText), textX, 68, badgeColor);
-        context.drawTextWithShadow(this.textRenderer, Text.literal("Event Date: " + date), textX, 82, 0xFF888888);
 
-        // Giant countdown timer on the right side of the banner
-        TournamentListScreen.drawPremiumBeveledBox(context, this.width - 170, 52, 140, 46, 0xEE070A0E, 0xFF2196F3, 0xFF0D2F4D);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("MATCH STARTS IN"), this.width - 100, 58, 0xFF888888);
-        
-        String timeStr = "TBD";
-        if (countdownTime > 0) {
-            long days = countdownTime / (24 * 3600);
-            long hours = (countdownTime % (24 * 3600)) / 3600;
-            long minutes = (countdownTime % 3600) / 60;
-            long seconds = countdownTime % 60;
-            if (days > 0) {
-                timeStr = String.format("%02dd : %02dh : %02dm", days, hours, minutes);
-            } else {
-                timeStr = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        if ("ONGOING".equals(status) || matchStarted) {
+            // Event is Live with pulsing red box
+            int alphaBg = (int) (0x40 + pulseVal * 0x30); // 64 to 112 opacity
+            int liveBgColor = (alphaBg << 24) | 0x3A0000;
+            int rIntensity = (int) (180 + pulseVal * 75);
+            int liveBorderColor = (0xFF << 24) | (rIntensity << 16) | (15 << 8) | 15;
+            int liveShadowColor = (0x80 << 24) | (rIntensity << 16) | (15 << 8) | 15;
+
+            TournamentListScreen.drawPremiumBeveledBox(context, this.width - 170, 52, 140, 46, liveBgColor, liveBorderColor, liveShadowColor);
+            
+            // Flashing indicator dot
+            String liveText = "EVENT IS LIVE";
+            int liveTextW = this.textRenderer.getWidth(liveText);
+            int startTextX = this.width - 100 - (liveTextW / 2);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("🔴"), startTextX - 10, 60, (int) (180 + pulseVal * 75) << 24 | 0xFF0000);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(liveText), this.width - 100, 60, 0xFFFFFFFF);
+            
+            // Gold pulsing JOIN button
+            int goldText = (0xFF << 24) | (255 << 16) | ((int) (200 + pulseVal * 55) << 8) | 55;
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("JOIN SERVER"), this.width - 100, 74, goldText);
+        } else if ("COMPLETED".equals(status)) {
+            // Event is completed
+            TournamentListScreen.drawPremiumBeveledBox(context, this.width - 170, 52, 140, 46, 0x801A1A1A, 0x40FFFFFF, 0x20FFFFFF);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("🔒 COMPLETED"), this.width - 100, 60, 0xFFAAAAAA);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("EVENT ENDED"), this.width - 100, 74, 0x88888888);
+        } else if ("APPROVED".equals(userStatus)) {
+            // User is approved: show pulsing countdown starts in box
+            int alphaBg = (int) (0x30 + pulseVal * 0x20); // 48 to 80 opacity
+            int liveBgColor = (alphaBg << 24) | 0x051A2E;
+            int bIntensity = (int) (150 + pulseVal * 105);
+            int liveBorderColor = (0xFF << 24) | (33 << 16) | (bIntensity << 8) | 0xFF;
+            int liveShadowColor = (0x80 << 24) | (33 << 16) | (bIntensity << 8) | 0xFF;
+
+            TournamentListScreen.drawPremiumBeveledBox(context, this.width - 170, 52, 140, 46, liveBgColor, liveBorderColor, liveShadowColor);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("MATCH STARTS IN"), this.width - 100, 58, 0xFF888888);
+            
+            String timeStr = "TBD";
+            if (countdownTime > 0) {
+                long days = countdownTime / (24 * 3600);
+                long hours = (countdownTime % (24 * 3600)) / 3600;
+                long minutes = (countdownTime % 3600) / 60;
+                long seconds = countdownTime % 60;
+                if (days > 0) {
+                    timeStr = String.format("%02dd : %02dh : %02dm : %02ds", days, hours, minutes, seconds);
+                } else {
+                    timeStr = String.format("%02dh : %02dm : %02ds", hours, minutes, seconds);
+                }
             }
-        } else if ("COMPLETED".equals(status)) {
-            timeStr = "COMPLETED";
-        } else if ("ONGOING".equals(status) || matchStarted || !serverIp.isEmpty()) {
-            timeStr = "LIVE / STARTED";
-        }
-        
-        int timeColor = 0xFF2196F3;
-        if ("LIVE / STARTED".equals(timeStr)) {
-            timeColor = 0xFF55FF55;
-        } else if ("COMPLETED".equals(timeStr)) {
-            timeColor = 0xFF888888;
-        }
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(timeStr), this.width - 100, 74, timeColor);
+            int timeColor = (0xFF << 24) | ((int)(200 + pulseVal * 55) << 16) | 0xFFFF; // fade white to cyan
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(timeStr), this.width - 100, 74, timeColor);
+        } else {
+            // User is not approved: show registration status info
+            int alphaBg = (int) (0x30 + pulseVal * 0x20);
+            int liveBgColor = (alphaBg << 24) | 0x080C14;
+            int bIntensity = (int) (60 + pulseVal * 50);
+            int liveBorderColor = (0xFF << 24) | (bIntensity << 16) | (bIntensity << 8) | bIntensity;
+            int liveShadowColor = (0x80 << 24) | (bIntensity << 16) | (bIntensity << 8) | bIntensity;
 
-        // Pulse indicators for live status
-        if ("LIVE / STARTED".equals(timeStr)) {
-            long pulseTime = System.currentTimeMillis();
-            boolean pulse = (pulseTime / 500) % 2 == 0;
-            context.fill(this.width - 160, 75, this.width - 156, 79, pulse ? 0xFFFF0000 : 0xFF880000);
+            TournamentListScreen.drawPremiumBeveledBox(context, this.width - 170, 52, 140, 46, liveBgColor, liveBorderColor, liveShadowColor);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("REGISTRATION"), this.width - 100, 58, 0xFF888888);
+            
+            String regStatusStr = "REG_OPEN".equals(status) ? "🟢 OPEN" : "🔒 CLOSED";
+            int regStatusColor = "REG_OPEN".equals(status) ? 0xFF4CAF50 : 0xFFFFB300;
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(regStatusStr), this.width - 100, 74, regStatusColor);
         }
 
         // Panel bounds calculation
@@ -438,8 +469,9 @@ public class TournamentDetailScreen extends Screen {
             registerButton.visible = false;
 
             // Left Overview Panel
-            TournamentListScreen.drawPremiumBeveledBox(context, 20, renderY, leftWidth, Math.max(scissorHeight, 200), 0xEE0B0F14, 0xFF3C464F, 0xFF0C0C0C);
+            TournamentListScreen.drawPremiumBeveledBox(context, 20, renderY, leftWidth, Math.max(scissorHeight, 200), 0x9F080C14, 0x30FFFFFF, 0x15FFFFFF);
             context.drawTextWithShadow(this.textRenderer, Text.literal("Tournament Overview"), 28, renderY + 8, 0xFF2196F3);
+            context.fill(28, renderY + 18, 20 + leftWidth - 8, renderY + 19, 0x30FFFFFF); // Subtle 1px separator line
             
             int yText = renderY + 26;
             List<OrderedText> descLines = this.textRenderer.wrapLines(Text.literal(description), leftWidth - 16);
@@ -468,8 +500,9 @@ public class TournamentDetailScreen extends Screen {
 
             // Left Rules Card
             int leftPanelH = Math.max(scissorHeight, 30 + rules.size() * 12);
-            TournamentListScreen.drawPremiumBeveledBox(context, 20, renderY, leftWidth, leftPanelH, 0xEE0B0F14, 0xFF3C464F, 0xFF0C0C0C);
+            TournamentListScreen.drawPremiumBeveledBox(context, 20, renderY, leftWidth, leftPanelH, 0x9F080C14, 0x30FFFFFF, 0x15FFFFFF);
             context.drawTextWithShadow(this.textRenderer, Text.literal("Tournament Rules"), 28, renderY + 8, 0xFF2196F3);
+            context.fill(28, renderY + 18, 20 + leftWidth - 8, renderY + 19, 0x30FFFFFF); // Subtle 1px separator line
             int ry = renderY + 26;
             for (int i = 0; i < rules.size(); i++) {
                 context.fill(30, ry + 3, 33, ry + 6, 0xFF2196F3);
@@ -479,15 +512,16 @@ public class TournamentDetailScreen extends Screen {
 
             // Right Schedule Timeline Card
             int rightPanelH = Math.max(scissorHeight, 30 + schedule.size() * 18);
-            TournamentListScreen.drawPremiumBeveledBox(context, rightX, renderY, rightWidth, rightPanelH, 0xEE0B0F14, 0xFF3C464F, 0xFF0C0C0C);
+            TournamentListScreen.drawPremiumBeveledBox(context, rightX, renderY, rightWidth, rightPanelH, 0x9F080C14, 0x30FFFFFF, 0x15FFFFFF);
             context.drawTextWithShadow(this.textRenderer, Text.literal("Event Timeline"), rightX + 8, renderY + 8, 0xFF2196F3);
+            context.fill(rightX + 8, renderY + 18, rightX + rightWidth - 8, renderY + 19, 0x30FFFFFF); // Subtle 1px separator line
             int sy = renderY + 26;
             if (schedule.size() > 0) {
                 context.fill(rightX + 12, renderY + 26, rightX + 13, renderY + 26 + (schedule.size() - 1) * 18 + 4, 0x44FFFFFF);
             }
             for (int i = 0; i < schedule.size(); i++) {
                 String[] entry = schedule.get(i);
-                context.fill(rightX + 10, sy + 3, rightX + 15, sy + 8, 0xFF3C3C3C);
+                context.fill(rightX + 10, sy + 3, rightX + 15, sy + 8, 0x33FFFFFF);
                 context.fill(rightX + 11, sy + 4, rightX + 14, sy + 7, 0xFFFFFFFF);
                 context.drawTextWithShadow(this.textRenderer, Text.literal(entry[0]), rightX + 22, sy, 0xFF2196F3);
                 context.drawTextWithShadow(this.textRenderer, Text.literal(entry[1]), rightX + 80, sy, 0xFFFFFF);
@@ -496,58 +530,70 @@ public class TournamentDetailScreen extends Screen {
 
         } else if ("CONNECT".equals(activeTab)) {
             // Left Status Card
-            TournamentListScreen.drawPremiumBeveledBox(context, 20, renderY, leftWidth, scissorHeight, 0xEE0B0F14, 0xFF3C464F, 0xFF0C0C0C);
+            TournamentListScreen.drawPremiumBeveledBox(context, 20, renderY, leftWidth, scissorHeight, 0x9F080C14, 0x30FFFFFF, 0x15FFFFFF);
             context.drawTextWithShadow(this.textRenderer, Text.literal("Registration & Whitelist"), 28, renderY + 8, 0xFF2196F3);
+            context.fill(28, renderY + 18, 20 + leftWidth - 8, renderY + 19, 0x30FFFFFF); // Subtle 1px separator line
             
             int cy = renderY + 26;
             if ("APPROVED".equals(userStatus)) {
-                context.fill(28, cy, 20 + leftWidth - 8, cy + 30, 0x114CAF50);
-                context.fill(28, cy, 29, cy + 30, 0xFF4CAF50);
-                context.drawTextWithShadow(this.textRenderer, Text.literal("APPROVED COMPETITOR"), 34, cy + 4, 0xFF4CAF50);
-                context.drawTextWithShadow(this.textRenderer, Text.literal("Whitelisted IGN: " + registeredIgn), 34, cy + 16, 0x999999);
-                cy += 36;
+                // Glow box with beveled style
+                int cardBgColor = 0x154CAF50;
+                int cardBorderColor = 0xFF4CAF50;
+                TournamentListScreen.drawPremiumBeveledBox(context, 28, cy, leftWidth - 16, 32, cardBgColor, cardBorderColor, cardBorderColor);
+                
+                context.drawTextWithShadow(this.textRenderer, Text.literal("✔ APPROVED COMPETITOR"), 34, cy + 4, 0xFF4CAF50);
+                context.drawTextWithShadow(this.textRenderer, Text.literal("Whitelisted IGN: " + registeredIgn), 34, cy + 18, 0xFFFFFF);
+                cy += 38;
                 
                 if (!broadcastMessage.isEmpty()) {
                     List<OrderedText> bcLines = this.textRenderer.wrapLines(Text.literal(broadcastMessage), leftWidth - 24);
-                    int bcHeight = bcLines.size() * 10 + 12;
-                    context.fill(28, cy, 20 + leftWidth - 8, cy + bcHeight, 0x22FFB300);
-                    context.fill(28, cy, 29, cy + bcHeight, 0xFFFFB300);
-                    context.drawTextWithShadow(this.textRenderer, Text.literal("STAFF BROADCAST MESSAGE"), 34, cy + 4, 0xFFFFB300);
-                    int bcy = cy + 14;
+                    int bcHeight = bcLines.size() * 10 + 16;
+                    int bcBg = 0x1AFFB300;
+                    int bcBorder = 0xFFFFB300;
+                    TournamentListScreen.drawPremiumBeveledBox(context, 28, cy, leftWidth - 16, bcHeight, bcBg, bcBorder, bcBorder);
+                    
+                    context.drawTextWithShadow(this.textRenderer, Text.literal("📢 STAFF BROADCAST MESSAGE"), 34, cy + 4, 0xFFFFB300);
+                    int bcy = cy + 16;
                     for (OrderedText line : bcLines) {
-                        context.drawTextWithShadow(this.textRenderer, line, 34, bcy, 0x999999);
+                        context.drawTextWithShadow(this.textRenderer, line, 34, bcy, 0xDDDDDD);
                         bcy += 10;
                     }
                 }
             } else if ("PENDING".equals(userStatus)) {
-                context.fill(28, cy, 20 + leftWidth - 8, cy + 50, 0x11FF9800);
-                context.fill(28, cy, 29, cy + 50, 0xFFFF9800);
-                context.drawTextWithShadow(this.textRenderer, Text.literal("AWAITING APPROVAL"), 34, cy + 4, 0xFFFF9800);
+                int cardBgColor = 0x15FFB300;
+                int cardBorderColor = 0xFFFFB300;
+                TournamentListScreen.drawPremiumBeveledBox(context, 28, cy, leftWidth - 16, 50, cardBgColor, cardBorderColor, cardBorderColor);
+                
+                context.drawTextWithShadow(this.textRenderer, Text.literal("⏳ AWAITING APPROVAL"), 34, cy + 4, 0xFFFFB300);
                 
                 List<OrderedText> pLines = this.textRenderer.wrapLines(Text.literal("Event staff is currently reviewing your registration request. Whitelist updates synchronize automatically."), leftWidth - 24);
-                int py = cy + 16;
+                int py = cy + 18;
                 for (OrderedText line : pLines) {
-                    context.drawTextWithShadow(this.textRenderer, line, 34, py, 0x999999);
+                    context.drawTextWithShadow(this.textRenderer, line, 34, py, 0xBBBBBB);
                     py += 10;
                 }
             } else if ("REJECTED".equals(userStatus)) {
-                context.fill(28, cy, 20 + leftWidth - 8, cy + 45, 0x22F44336);
-                context.fill(28, cy, 29, cy + 45, 0xFFF44336);
-                context.drawTextWithShadow(this.textRenderer, Text.literal("APPROVAL DECLINED"), 34, cy + 4, 0xFFF44336);
+                int cardBgColor = 0x1AF44336;
+                int cardBorderColor = 0xFFF44336;
+                TournamentListScreen.drawPremiumBeveledBox(context, 28, cy, leftWidth - 16, 45, cardBgColor, cardBorderColor, cardBorderColor);
+                
+                context.drawTextWithShadow(this.textRenderer, Text.literal("❌ APPROVAL DECLINED"), 34, cy + 4, 0xFFF44336);
                 
                 List<OrderedText> rLines = this.textRenderer.wrapLines(Text.literal("Your application was declined by event administrators. Check compliance regulations or contact staff."), leftWidth - 24);
-                int ry = cy + 16;
+                int ry = cy + 18;
                 for (OrderedText line : rLines) {
-                    context.drawTextWithShadow(this.textRenderer, line, 34, ry, 0x999999);
+                    context.drawTextWithShadow(this.textRenderer, line, 34, ry, 0xBBBBBB);
                     ry += 10;
                 }
             } else {
-                context.fill(28, cy, 20 + leftWidth - 8, cy + 45, 0x11FFFFFF);
-                context.fill(28, cy, 29, cy + 45, 0xFF888888);
-                context.drawTextWithShadow(this.textRenderer, Text.literal("NOT REGISTERED"), 34, cy + 4, 0xFF888888);
+                int cardBgColor = 0x1AF44336; // Red background for not registered
+                int cardBorderColor = 0xFFF44336; // Red border for not registered
+                TournamentListScreen.drawPremiumBeveledBox(context, 28, cy, leftWidth - 16, 45, cardBgColor, cardBorderColor, cardBorderColor);
+                
+                context.drawTextWithShadow(this.textRenderer, Text.literal("❓ NOT REGISTERED"), 34, cy + 4, 0xFFF44336);
                 
                 List<OrderedText> unLines = this.textRenderer.wrapLines(Text.literal("You have not submitted a registration for this event yet. If registration is open, register now."), leftWidth - 24);
-                int uny = cy + 16;
+                int uny = cy + 18;
                 for (OrderedText line : unLines) {
                     context.drawTextWithShadow(this.textRenderer, line, 34, uny, 0x999999);
                     uny += 10;
@@ -555,8 +601,9 @@ public class TournamentDetailScreen extends Screen {
             }
 
             // Right Server Connection Card
-            TournamentListScreen.drawPremiumBeveledBox(context, rightX, renderY, rightWidth, scissorHeight, 0xEE0B0F14, 0xFF3C464F, 0xFF0C0C0C);
+            TournamentListScreen.drawPremiumBeveledBox(context, rightX, renderY, rightWidth, scissorHeight, 0x9F080C14, 0x30FFFFFF, 0x15FFFFFF);
             context.drawTextWithShadow(this.textRenderer, Text.literal("Server Connection"), rightX + 8, renderY + 8, 0xFF2196F3);
+            context.fill(rightX + 8, renderY + 18, rightX + rightWidth - 8, renderY + 19, 0x30FFFFFF); // Subtle 1px separator line
 
             boolean isServerJoinable = matchStarted || !serverIp.isEmpty();
             int btnY = renderY + 70;
@@ -564,8 +611,8 @@ public class TournamentDetailScreen extends Screen {
 
             if ("APPROVED".equals(userStatus) && isServerJoinable) {
                 context.fill(rightX + 8, renderY + 26, rightX + rightWidth - 8, renderY + 58, 0x114CAF50);
-                context.drawTextWithShadow(this.textRenderer, Text.literal("SERVER IP: " + serverIp), rightX + 14, renderY + 32, 0xFFFFFFFF);
-                context.drawTextWithShadow(this.textRenderer, Text.literal("Match server is active and joinable!"), rightX + 14, renderY + 44, 0x999999);
+                context.drawTextWithShadow(this.textRenderer, Text.literal("SERVER STATUS: ONLINE"), rightX + 14, renderY + 32, 0xFF4CAF50);
+                context.drawTextWithShadow(this.textRenderer, Text.literal("Matches are in progress. Join now!"), rightX + 14, renderY + 44, 0x999999);
 
                 joinButton.visible = btnVisible;
                 joinButton.setX(rightX + 8);
@@ -575,7 +622,6 @@ public class TournamentDetailScreen extends Screen {
                 registerButton.visible = false;
 
                 // Pulsing glow border around button
-                long time = System.currentTimeMillis();
                 float pulse = (float) (Math.sin(time / 200.0) + 1.0) / 2.0f;
                 int pulseAlpha = (int) (100 + (pulse * 155));
                 int pulseColor = (pulseAlpha << 24) | 0x4CAF50;
@@ -643,9 +689,10 @@ public class TournamentDetailScreen extends Screen {
 
     private void drawSpecCard(DrawContext context, int x, int y, int w, String label, String value, int valColor) {
         // Stacked premium bevel box: label on top, value on bottom
-        TournamentListScreen.drawPremiumBeveledBox(context, x, y, w, 34, 0xEE0E141C, 0xFF3C464F, 0xFF050709);
+        TournamentListScreen.drawPremiumBeveledBox(context, x, y, w, 34, 0x80080C14, 0x25FFFFFF, 0x10FFFFFF);
         context.drawTextWithShadow(this.textRenderer, Text.literal(label), x + 8, y + 5, 0x888888);
-        context.drawTextWithShadow(this.textRenderer, Text.literal(value), x + 16, y + 18, valColor);
+        context.fill(x + 6, y + 14, x + w - 6, y + 15, 0x15FFFFFF); // Subtle 1px separator line
+        context.drawTextWithShadow(this.textRenderer, Text.literal(value), x + 16, y + 20, valColor);
     }
 
     @Override
