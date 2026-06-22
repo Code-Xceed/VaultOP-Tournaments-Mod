@@ -82,7 +82,7 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         int boardX = 115;
         int boardW = this.width - 127;
-        int boardY = this.height - 90;
+        int boardY = this.height - 105;
         int boardH = 75;
 
         if (mouseX >= boardX && mouseX <= boardX + boardW && mouseY >= boardY && mouseY <= boardY + boardH) {
@@ -130,7 +130,7 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
         // 4. Draw Bulletins & Announcements Board (Lower-Right Bottom Half)
         int boardX = 115;
         int boardW = this.width - 127;
-        int boardY = this.height - 90;
+        int boardY = this.height - 105;
         int boardH = 75;
 
         TournamentListScreen.drawPremiumBeveledBox(context, boardX, boardY, boardW, boardH, 0xE50B0C0E, 0x40D7A15C, 0x20D7A15C);
