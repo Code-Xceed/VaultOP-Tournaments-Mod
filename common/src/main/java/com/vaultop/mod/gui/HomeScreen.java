@@ -26,35 +26,34 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
 
     @Override
     protected void init() {
-        int panelX = 20;
-        int panelY = 25;
-        int panelW = this.width - 40;
-        int panelH = this.height - 45;
+        rebuildWidgets();
+        fetchAnnouncements();
+    }
 
-        // 1. Back button at top-left
-        int backX = panelX + 10;
-        int backY = panelY + 10;
-        this.addDrawableChild(new PremiumButtonWidget(backX, backY, 40, 20, Text.literal("Back"), button -> close(), 0xFF8B2B2B, 0xFF4A1010, 0xFFE57373));
+    private void rebuildWidgets() {
+        this.clearChildren();
 
-        // 2. Navigation buttons stacked in the bottom-left corner with margin
-        int navBtnW = 100;
-        int navBtnH = 20;
-        int navBtnX = panelX + 10;
-        int navBtnY = panelY + panelH - 10 - (3 * navBtnH) - (2 * 4); // margin at bottom is 10, spacing is 4
+        // 1. Back button pushed to the extreme top-left corner
+        this.addDrawableChild(new PremiumButtonWidget(10, 10, 40, 18, Text.literal("Back"), button -> close(), 0xFF8B2B2B, 0xFF4A1010, 0xFFE57373));
 
-        this.addDrawableChild(new PremiumButtonWidget(navBtnX, navBtnY, navBtnW, navBtnH, Text.literal("Tournaments"), button -> {
+        // 2. Navigation buttons stacked in the extreme bottom-left corner
+        int btnW = 90;
+        int btnH = 18;
+        int spacing = 4;
+        
+        int startY = this.height - 10 - (3 * btnH) - (2 * spacing);
+
+        this.addDrawableChild(new PremiumButtonWidget(10, startY, btnW, btnH, Text.literal("Tournaments"), button -> {
             this.client.setScreen(new TournamentListScreen(this));
         }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
 
-        this.addDrawableChild(new PremiumButtonWidget(navBtnX, navBtnY + 24, navBtnW, navBtnH, Text.literal("Profile"), button -> {
+        this.addDrawableChild(new PremiumButtonWidget(10, startY + btnH + spacing, btnW, btnH, Text.literal("Profile"), button -> {
             this.client.setScreen(new ProfileScreen(this));
         }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
 
-        this.addDrawableChild(new PremiumButtonWidget(navBtnX, navBtnY + 48, navBtnW, navBtnH, Text.literal("Leaderboard"), button -> {
+        this.addDrawableChild(new PremiumButtonWidget(10, startY + (2 * (btnH + spacing)), btnW, btnH, Text.literal("Leaderboard"), button -> {
             this.client.setScreen(new LeaderboardScreen(this));
         }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
-
-        fetchAnnouncements();
     }
 
     private void fetchAnnouncements() {
@@ -81,22 +80,17 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        int panelX = 20;
-        int panelY = 25;
-        int panelW = this.width - 40;
-        int panelH = this.height - 45;
-
-        int boardX = panelX + 120;
-        int boardY = panelY + panelH / 2 + 10;
-        int boardW = panelW - 130;
-        int boardH = panelH / 2 - 20;
+        int boardX = 115;
+        int boardW = this.width - 127;
+        int boardY = this.height - 90;
+        int boardH = 75;
 
         if (mouseX >= boardX && mouseX <= boardX + boardW && mouseY >= boardY && mouseY <= boardY + boardH) {
-            int scrollAreaH = boardH - 25;
-            int totalHeight = announcements.size() * 50;
+            int scrollAreaH = boardH - 21;
+            int totalHeight = announcements.size() * 42;
             int maxScroll = Math.max(0, totalHeight - scrollAreaH);
             if (verticalAmount != 0) {
-                scrollOffset -= (int) Math.signum(verticalAmount) * 15;
+                scrollOffset -= (int) Math.signum(verticalAmount) * 12;
                 if (scrollOffset < 0) scrollOffset = 0;
                 if (scrollOffset > maxScroll) scrollOffset = maxScroll;
                 return true;
@@ -116,66 +110,40 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderBackground(context, mouseX, mouseY, delta);
 
-        int panelX = 20;
-        int panelY = 25;
-        int panelW = this.width - 40;
-        int panelH = this.height - 45;
-
-        // 1. Draw Main Center Dashboard Container
+        // 1. Draw outer premium dashboard container
+        int panelX = 15;
+        int panelY = 32;
+        int panelW = this.width - 30;
+        int panelH = this.height - 47;
         TournamentListScreen.drawPremiumBeveledBox(context, panelX, panelY, panelW, panelH, 0xD00A0E17, 0x302196F3, 0x152196F3);
 
         float tick = System.currentTimeMillis() / 50.0f;
 
-        // 2. Draw Left Stats Panel (Competitors Quick Stats)
-        int leftStatsX = panelX + 10;
-        int leftStatsY = panelY + 35;
-        int leftStatsW = 100;
-        int leftStatsH = 52;
-        TournamentListScreen.drawPremiumBeveledBox(context, leftStatsX, leftStatsY, leftStatsW, leftStatsH, 0x8005080E, 0x20FFFFFF, 0x10FFFFFF);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§9COMPETITORS"), leftStatsX + leftStatsW / 2, leftStatsY + 4, 0xFFFFFF);
-        context.fill(leftStatsX + 6, leftStatsY + 13, leftStatsX + leftStatsW - 6, leftStatsY + 14, 0x20FFFFFF);
-        
-        context.drawTextWithShadow(this.textRenderer, Text.literal("§7Tourneys: §e20+"), leftStatsX + 8, leftStatsY + 18, 0xFFFFFF);
-        context.drawTextWithShadow(this.textRenderer, Text.literal("§7Registered:"), leftStatsX + 8, leftStatsY + 30, 0xFFFFFF);
-        context.drawTextWithShadow(this.textRenderer, Text.literal("§b1,000+"), leftStatsX + 8, leftStatsY + 40, 0xFFFFFF);
-
-        // 3. Draw Right Stats Panel (Prize Pool & Active Servers Stats)
-        int rightStatsX = panelX + panelW - 110;
-        int rightStatsY = panelY + 10;
-        int rightStatsW = 100;
-        int rightStatsH = 52;
-        TournamentListScreen.drawPremiumBeveledBox(context, rightStatsX, rightStatsY, rightStatsW, rightStatsH, 0x8005080E, 0x20FFFFFF, 0x10FFFFFF);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§eSTATS"), rightStatsX + rightStatsW / 2, rightStatsY + 4, 0xFFFFFF);
-        context.fill(rightStatsX + 6, rightStatsY + 13, rightStatsX + rightStatsW - 6, rightStatsY + 14, 0x20FFFFFF);
-        
-        context.drawTextWithShadow(this.textRenderer, Text.literal("§7Prizes: §63krs+"), rightStatsX + 8, rightStatsY + 18, 0xFFFFFF);
-        context.drawTextWithShadow(this.textRenderer, Text.literal("§7Servers:"), rightStatsX + 8, rightStatsY + 30, 0xFFFFFF);
-        context.drawTextWithShadow(this.textRenderer, Text.literal("§a5 Online"), rightStatsX + 8, rightStatsY + 40, 0xFFFFFF);
-
-        // 4. Draw Center Trophy & Floating Title
-        int centerCX = panelX + 110 + (panelW - 220) / 2;
-        int trophyY = panelY + 12;
+        // 2. Draw Center Trophy
+        int centerCX = panelX + (panelW) / 2;
+        int trophyY = panelY + 28;
         drawBigTrophy(context, centerCX, trophyY, tick);
-        drawAnimatedTitle(context, centerCX, trophyY + 32, tick);
 
-        // 5. Draw Bulletins & Announcements Board (Lower-Right Half)
-        int boardX = panelX + 120;
-        int boardY = panelY + panelH / 2 + 10;
-        int boardW = panelW - 130;
-        int boardH = panelH / 2 - 20;
+        // 3. Draw BIG, ANIMATED Title
+        drawAnimatedTitle(context, centerCX, trophyY + 36, tick);
+
+        // 4. Draw Bulletins & Announcements Board (Lower-Right Bottom Half)
+        int boardX = 115;
+        int boardW = this.width - 127;
+        int boardY = this.height - 90;
+        int boardH = 75;
 
         TournamentListScreen.drawPremiumBeveledBox(context, boardX, boardY, boardW, boardH, 0xE50B0C0E, 0x40D7A15C, 0x20D7A15C);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§e📢 BULLETINS & ANNOUNCEMENTS"), boardX + boardW / 2, boardY + 6, 0xFFFFFF);
-        context.fill(boardX + 10, boardY + 17, boardX + boardW - 10, boardY + 18, 0x20FFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§e📢 BULLETINS & ANNOUNCEMENTS"), boardX + boardW / 2, boardY + 4, 0xFFFFFF);
+        context.fill(boardX + 8, boardY + 13, boardX + boardW - 8, boardY + 14, 0x20FFFFFF);
 
-        // Scissor clip area for scrollable announcements list
-        int scrollAreaH = boardH - 25;
+        int scrollAreaH = boardH - 21;
         if (!loadingStatus.isEmpty()) {
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§7" + loadingStatus), boardX + boardW / 2, boardY + 22 + scrollAreaH / 2 - 4, 0xFFFFFF);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§7" + loadingStatus), boardX + boardW / 2, boardY + 14 + scrollAreaH / 2 - 4, 0xFFFFFF);
         } else {
-            context.enableScissor(boardX + 2, boardY + 20, boardX + boardW - 2, boardY + boardH - 4);
+            context.enableScissor(boardX + 2, boardY + 15, boardX + boardW - 2, boardY + boardH - 4);
 
-            int currentY = boardY + 22 - scrollOffset;
+            int currentY = boardY + 16 - scrollOffset;
             int cardW = boardW - 16;
 
             for (JsonObject announcement : announcements) {
@@ -197,20 +165,17 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
                 }
 
                 // Draw card background
-                TournamentListScreen.drawPremiumBeveledBox(context, boardX + 8, currentY, cardW, 46, 0x40000000, typeBorderColor, typeBorderColor / 2);
+                TournamentListScreen.drawPremiumBeveledBox(context, boardX + 8, currentY, cardW, 38, 0x40000000, typeBorderColor, typeBorderColor / 2);
 
-                // Category tag
-                context.drawTextWithShadow(this.textRenderer, Text.literal(categoryTag), boardX + 14, currentY + 4, 0xFFFFFF);
-
-                // Title
-                String truncatedTitle = title;
-                if (this.textRenderer.getWidth(title) > cardW - 20) {
-                    truncatedTitle = this.textRenderer.trimToWidth(title, cardW - 30) + "...";
+                // Category and title
+                String displayTitle = title;
+                if (this.textRenderer.getWidth(title) > cardW - 60) {
+                    displayTitle = this.textRenderer.trimToWidth(title, cardW - 70) + "..";
                 }
-                context.drawTextWithShadow(this.textRenderer, Text.literal("§e" + truncatedTitle), boardX + 14, currentY + 14, 0xFFFFFF);
+                context.drawTextWithShadow(this.textRenderer, Text.literal(categoryTag + " §e" + displayTitle), boardX + 14, currentY + 4, 0xFFFFFF);
 
                 // Description
-                int descY = currentY + 25;
+                int descY = currentY + 14;
                 List<OrderedText> wrappedDesc = this.textRenderer.wrapLines(Text.literal("§f" + desc), cardW - 14);
                 int lineCount = 0;
                 for (OrderedText line : wrappedDesc) {
@@ -219,17 +184,17 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
                     lineCount++;
                 }
 
-                currentY += 50;
+                currentY += 42;
             }
 
             context.disableScissor();
 
-            // Draw Scrollbar if content exceeds height
-            int totalHeight = announcements.size() * 50;
+            // Scrollbar
+            int totalHeight = announcements.size() * 42;
             int maxScroll = Math.max(0, totalHeight - scrollAreaH);
             if (maxScroll > 0) {
                 int scrollbarX = boardX + boardW - 6;
-                int scrollbarY = boardY + 22;
+                int scrollbarY = boardY + 16;
                 context.fill(scrollbarX, scrollbarY, scrollbarX + 2, scrollbarY + scrollAreaH, 0x22FFFFFF);
 
                 int thumbHeight = (scrollAreaH * scrollAreaH) / (scrollAreaH + maxScroll);
@@ -243,8 +208,13 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
     }
 
     private void drawBigTrophy(DrawContext context, int cx, int cy, float tick) {
-        int bob = (int) (Math.sin(tick * 0.12) * 2.5);
-        int y = cy + bob;
+        float scale = 1.8f;
+        context.getMatrices().push();
+        context.getMatrices().translate(cx, cy, 0);
+        context.getMatrices().scale(scale, scale, 1.0f);
+
+        int bob = (int) (Math.sin(tick * 0.12) * 1.5);
+        int y = bob;
 
         int gold = 0xFFFFD700;
         int shadowGold = 0xFFB8860B;
@@ -252,32 +222,34 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
         int baseColor = 0xFF3C464F;
 
         // Rim
-        context.fill(cx - 10, y - 18, cx + 10, y - 16, gold);
-        context.fill(cx - 8, y - 16, cx + 8, y - 14, gold);
+        context.fill(-10, y - 18, 10, y - 16, gold);
+        context.fill(-8, y - 16, 8, y - 14, gold);
 
         // Bowl
-        context.fill(cx - 8, y - 14, cx + 8, y - 6, gold);
-        context.fill(cx - 6, y - 14, cx - 4, y - 8, shine);
-        context.fill(cx + 4, y - 14, cx + 8, y - 6, shadowGold);
+        context.fill(-8, y - 14, 8, y - 6, gold);
+        context.fill(-6, y - 14, -4, y - 8, shine);
+        context.fill(4, y - 14, 8, y - 6, shadowGold);
 
         // Left Handle
-        context.fill(cx - 13, y - 14, cx - 10, y - 12, gold);
-        context.fill(cx - 15, y - 12, cx - 13, y - 6, gold);
-        context.fill(cx - 13, y - 6, cx - 10, y - 4, gold);
+        context.fill(-13, y - 14, -10, y - 12, gold);
+        context.fill(-15, y - 12, -13, y - 6, gold);
+        context.fill(-13, y - 6, -10, y - 4, gold);
 
         // Right Handle
-        context.fill(cx + 10, y - 14, cx + 13, y - 12, gold);
-        context.fill(cx + 13, y - 12, cx + 15, y - 6, gold);
-        context.fill(cx + 10, y - 6, cx + 13, y - 4, gold);
+        context.fill(10, y - 14, 13, y - 12, gold);
+        context.fill(13, y - 12, 15, y - 6, gold);
+        context.fill(10, y - 6, 13, y - 4, gold);
 
         // Stem
-        context.fill(cx - 3, y - 6, cx + 3, y + 2, gold);
-        context.fill(cx + 1, y - 6, cx + 3, y + 2, shadowGold);
+        context.fill(-3, y - 6, 3, y + 2, gold);
+        context.fill(1, y - 6, 3, y + 2, shadowGold);
 
         // Base
-        context.fill(cx - 6, y + 2, cx + 6, y + 4, shadowGold);
-        context.fill(cx - 8, y + 4, cx + 8, y + 8, baseColor);
-        context.fill(cx - 7, y + 5, cx - 5, y + 7, 0x88FFFFFF);
+        context.fill(-6, y + 2, 6, y + 4, shadowGold);
+        context.fill(-8, y + 4, 8, y + 8, baseColor);
+        context.fill(-7, y + 5, -5, y + 7, 0x88FFFFFF);
+
+        context.getMatrices().pop();
     }
 
     private void drawAnimatedTitle(DrawContext context, int centerX, int y, float tick) {
@@ -290,27 +262,49 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
         int width3 = this.textRenderer.getWidth(w3);
         int totalWidth = width1 + width2 + width3;
 
-        int startX = centerX - totalWidth / 2;
+        float titleScale = 2.2f + 0.12f * (float) Math.sin(tick * 0.08f);
 
-        drawWord(context, w1, startX, y, tick, 0, 0xFFFFD700);
-        startX += width1;
+        context.getMatrices().push();
+        context.getMatrices().translate(centerX, y, 0);
+        context.getMatrices().scale(titleScale, titleScale, 1.0f);
 
-        drawWord(context, w2, startX, y, tick, w1.length(), 0xFF55FF55);
-        startX += width2;
+        // Center origin for the scaled string
+        int startX = -totalWidth / 2;
 
-        drawWord(context, w3, startX, y, tick, w1.length() + w2.length(), 0xFFFFFFFF);
+        startX = drawWord(context, w1, startX, 0, tick, 0, 0xFFFFD700, 0xFFFFFF55);
+        startX = drawWord(context, w2, startX, 0, tick, w1.length(), 0xFF55FF55, 0xFF55FFFF);
+        startX = drawWord(context, w3, startX, 0, tick, w1.length() + w2.length(), 0xFFFFFFFF, 0xFFCCCCCC);
+
+        context.getMatrices().pop();
     }
 
-    private void drawWord(DrawContext context, String text, int startX, int y, float tick, int offset, int color) {
+    private int drawWord(DrawContext context, String text, int startX, int y, float tick, int offset, int col1, int col2) {
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
             String charStr = String.valueOf(c);
             int charW = this.textRenderer.getWidth(charStr);
 
-            float floatY = (float) Math.sin((tick * 0.15) + ((i + offset) * 0.4)) * 2.0f;
+            float floatY = (float) Math.sin((tick * 0.15) + ((i + offset) * 0.4)) * 1.0f;
+            int color = getAnimatedColor(col1, col2, tick, i + offset);
             context.drawTextWithShadow(this.textRenderer, Text.literal(charStr), startX, y + (int) floatY, color);
             startX += charW;
         }
+        return startX;
+    }
+
+    private int getAnimatedColor(int baseColor1, int baseColor2, float tick, int index) {
+        float pulse = (float) Math.sin(tick * 0.06f + index * 0.3f);
+        float ratio = (pulse + 1.0f) / 2.0f;
+        int r1 = (baseColor1 >> 16) & 0xFF;
+        int g1 = (baseColor1 >> 8) & 0xFF;
+        int b1 = baseColor1 & 0xFF;
+        int r2 = (baseColor2 >> 16) & 0xFF;
+        int g2 = (baseColor2 >> 8) & 0xFF;
+        int b2 = baseColor2 & 0xFF;
+        int r = (int) (r1 * (1.0f - ratio) + r2 * ratio);
+        int g = (int) (g1 * (1.0f - ratio) + g2 * ratio);
+        int b = (int) (b1 * (1.0f - ratio) + b2 * ratio);
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 
     @Override

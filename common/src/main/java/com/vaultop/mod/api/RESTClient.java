@@ -140,4 +140,26 @@ public class RESTClient {
                     throw new RuntimeException("HTTP Status " + response.statusCode());
                 });
     }
+
+    public CompletableFuture<JsonObject> linkIgn(String token, String ign, String accountType) {
+        JsonObject body = new JsonObject();
+        body.addProperty("ign", ign);
+        body.addProperty("accountType", accountType);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(getBaseUrl() + "/api/auth/link-ign"))
+                .header("Authorization", "Bearer " + token)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
+                .build();
+
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> {
+                    if (response.statusCode() == 200 || response.statusCode() == 201) {
+                        return JsonParser.parseString(response.body()).getAsJsonObject();
+                    }
+                    throw new RuntimeException("HTTP Status " + response.statusCode() + ": " + response.body());
+                });
+    }
 }
+
