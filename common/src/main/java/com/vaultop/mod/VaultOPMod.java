@@ -1,6 +1,12 @@
 package com.vaultop.mod;
 
+import com.google.gson.JsonObject;
 import com.vaultop.mod.auth.SessionManager;
+import com.vaultop.mod.api.WebSocketMessageListener;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +52,42 @@ public class VaultOPMod {
             this.webSocketManager.disconnect();
         }
         this.webSocketManager = new com.vaultop.mod.api.WebSocketManager(token);
+        this.webSocketManager.setMessageListener(this::handleWebSocketMessage);
         this.webSocketManager.connect();
+    }
+
+    private void handleWebSocketMessage(JsonObject json) {
+        if (json.has("type") && !json.get("type").isJsonNull()) {
+            String type = json.get("type").getAsString();
+            
+            if ("ANNOUNCEMENT".equals(type)) {
+                MinecraftClient.getInstance().execute(() -> {
+                    try {
+                        MinecraftClient.getInstance().getSoundManager().play(
+                            PositionedSoundInstance.master(SoundEvents.BLOCK_BELL_USE, 1.0f)
+                        );
+                        
+                        if (MinecraftClient.getInstance().player != null) {
+                            String title = json.has("title") ? json.get("title").getAsString() : "New Announcement";
+                            String desc = json.has("desc") ? json.get("desc").getAsString() : "";
+                            MinecraftClient.getInstance().player.sendMessage(
+                                Text.literal("§6[VaultOP Announcement] §e" + title + ": §f" + desc),
+                                false
+                            );
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("Failed to process announcement sound/message", e);
+                    }
+                });
+            }
+        }
+        
+        MinecraftClient.getInstance().execute(() -> {
+            net.minecraft.client.gui.screen.Screen currentScreen = MinecraftClient.getInstance().currentScreen;
+            if (currentScreen instanceof WebSocketMessageListener) {
+                ((WebSocketMessageListener) currentScreen).onWebSocketMessage(json);
+            }
+        });
     }
 
     public void stopWebSocket() {

@@ -14,10 +14,11 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 
+import com.vaultop.mod.api.WebSocketMessageListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TournamentDetailScreen extends Screen {
+public class TournamentDetailScreen extends Screen implements WebSocketMessageListener {
     private final Screen parent;
     private final JsonObject tournament;
     private final String tournamentId;
@@ -216,32 +217,6 @@ public class TournamentDetailScreen extends Screen {
         // Fetch real-time registration status
         fetchFreshStatus();
 
-        // Listen for WebSocket notifications
-        if (VaultOPMod.getInstance().getWebSocketManager() != null) {
-            VaultOPMod.getInstance().getWebSocketManager().setMessageListener(json -> {
-                if (json.has("type") && !json.get("type").isJsonNull()) {
-                    String type = json.get("type").getAsString();
-                    if ("MATCH_START".equals(type) && json.has("tournamentId") && !json.get("tournamentId").isJsonNull()) {
-                        String tId = json.get("tournamentId").getAsString();
-                        if (tId.equals(tournamentId)) {
-                            this.serverIp = json.has("ip") && !json.get("ip").isJsonNull() ? json.get("ip").getAsString() : "";
-                            this.matchStarted = true;
-                            this.client.execute(() -> {
-                                if (this.joinButton != null) {
-                                    this.joinButton.active = true;
-                                }
-                            });
-                        }
-                    }
-                    if ("TOURNAMENT_UPDATED".equals(type) && json.has("tournamentId") && !json.get("tournamentId").isJsonNull()) {
-                        String tId = json.get("tournamentId").getAsString();
-                        if (tId.equals(tournamentId)) {
-                            this.client.execute(this::fetchFreshStatus);
-                        }
-                    }
-                }
-            });
-        }
     }
 
     private void selectTab(String tab) {
@@ -704,5 +679,30 @@ public class TournamentDetailScreen extends Screen {
     @Override
     public void close() {
         this.client.setScreen(this.parent);
+    }
+
+    @Override
+    public void onWebSocketMessage(JsonObject json) {
+        if (json.has("type") && !json.get("type").isJsonNull()) {
+            String type = json.get("type").getAsString();
+            if ("MATCH_START".equals(type) && json.has("tournamentId") && !json.get("tournamentId").isJsonNull()) {
+                String tId = json.get("tournamentId").getAsString();
+                if (tId.equals(tournamentId)) {
+                    this.serverIp = json.has("ip") && !json.get("ip").isJsonNull() ? json.get("ip").getAsString() : "";
+                    this.matchStarted = true;
+                    this.client.execute(() -> {
+                        if (this.joinButton != null) {
+                            this.joinButton.active = true;
+                        }
+                    });
+                }
+            }
+            if ("TOURNAMENT_UPDATED".equals(type) && json.has("tournamentId") && !json.get("tournamentId").isJsonNull()) {
+                String tId = json.get("tournamentId").getAsString();
+                if (tId.equals(tournamentId)) {
+                    this.client.execute(this::fetchFreshStatus);
+                }
+            }
+        }
     }
 }

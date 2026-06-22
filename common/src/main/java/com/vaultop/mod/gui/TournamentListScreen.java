@@ -10,10 +10,11 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
+import com.vaultop.mod.api.WebSocketMessageListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TournamentListScreen extends Screen {
+public class TournamentListScreen extends Screen implements WebSocketMessageListener {
     private final Screen parent;
     private final List<JsonObject> allTournaments = new ArrayList<>();
     private final List<JsonObject> filteredTournaments = new ArrayList<>();
@@ -162,18 +163,6 @@ public class TournamentListScreen extends Screen {
 
         // Fetch Tournaments from REST API
         refreshList();
-
-        // Listen for WebSocket notifications
-        if (VaultOPMod.getInstance().getWebSocketManager() != null) {
-            VaultOPMod.getInstance().getWebSocketManager().setMessageListener(json -> {
-                if (json.has("type") && !json.get("type").isJsonNull()) {
-                    String type = json.get("type").getAsString();
-                    if ("TOURNAMENT_UPDATED".equals(type) || "MAINTENANCE_UPDATE".equals(type)) {
-                        this.client.execute(this::refreshList);
-                    }
-                }
-            });
-        }
     }
 
     private void rebuildWidgets() {
@@ -435,9 +424,16 @@ public class TournamentListScreen extends Screen {
 
     @Override
     public void close() {
-        if (VaultOPMod.getInstance().getWebSocketManager() != null) {
-            VaultOPMod.getInstance().getWebSocketManager().setMessageListener(null);
-        }
         this.client.setScreen(this.parent);
+    }
+
+    @Override
+    public void onWebSocketMessage(JsonObject json) {
+        if (json.has("type") && !json.get("type").isJsonNull()) {
+            String type = json.get("type").getAsString();
+            if ("TOURNAMENT_UPDATED".equals(type) || "MAINTENANCE_UPDATE".equals(type)) {
+                this.client.execute(this::refreshList);
+            }
+        }
     }
 }

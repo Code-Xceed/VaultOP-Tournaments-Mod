@@ -125,4 +125,19 @@ public class RESTClient {
                     throw new RuntimeException("HTTP Status " + response.statusCode());
                 });
     }
+
+    public CompletableFuture<com.google.gson.JsonArray> fetchAnnouncements() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(getBaseUrl() + "/api/announcements"))
+                .GET()
+                .build();
+
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> {
+                    if (response.statusCode() == 200) {
+                        return JsonParser.parseString(response.body()).getAsJsonArray();
+                    }
+                    throw new RuntimeException("HTTP Status " + response.statusCode());
+                });
+    }
 }
