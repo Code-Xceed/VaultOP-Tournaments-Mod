@@ -8,6 +8,4 @@ repositories {
 
 dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${gradle.ext.fabric_api_version}"
-    implementation 'dev.firstdark.discordrpc:discord-rpc:1.0.4'
-    include 'dev.firstdark.discordrpc:discord-rpc:1.0.4'
 }

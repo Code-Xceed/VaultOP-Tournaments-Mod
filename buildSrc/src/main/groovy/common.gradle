@@ -16,10 +16,6 @@ manifold {
 
 repositories {
     mavenCentral()
-    maven {
-        name "FDD Maven"
-        url "https://maven.firstdark.dev/releases"
-    }
 }
 
 dependencies {
