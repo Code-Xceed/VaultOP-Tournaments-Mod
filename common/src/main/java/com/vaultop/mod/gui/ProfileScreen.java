@@ -445,13 +445,68 @@ public class ProfileScreen extends Screen {
             }
 
             if (skinTex != null) {
-                // Try actual 3D model rendering (works without joining a world)
-                if (!render3DPlayerModel(context, skinTex, entityRotation, rightX + rightW / 2, rightY + rightH / 2 + 20, rightH)) {
-                    // Fallback to 2D rendering
-                    float skinScale = 1.4f;
-                    int skinH = (int) (64 * skinScale);
-                    int skinCenterY = rightY + (rightH - skinH) / 2 + 10;
-                    render25DCharacter(context, skinTex, rightX + rightW / 2, skinCenterY, skinScale);
+                boolean rendered = false;
+                if (client.player != null) {
+                    try {
+                        int centerX = rightX + rightW / 2;
+                        int centerY = rightY + rightH / 2 + 35; // Shift down slightly so feet fit
+                        int size = (int) (rightH * 0.38f); // Scale factor for player model
+
+                        // Temporarily rotate the client player entity for rendering
+                        float oldYaw = client.player.getYaw();
+                        float oldPitch = client.player.getPitch();
+                        float oldBodyYaw = client.player.bodyYaw;
+                        float oldHeadYaw = client.player.headYaw;
+                        float oldPrevYaw = client.player.prevYaw;
+                        float oldPrevPitch = client.player.prevPitch;
+                        float oldPrevBodyYaw = client.player.prevBodyYaw;
+                        float oldPrevHeadYaw = client.player.prevHeadYaw;
+
+                        client.player.setYaw(entityRotation);
+                        client.player.setPitch(0);
+                        client.player.bodyYaw = entityRotation;
+                        client.player.headYaw = entityRotation;
+                        client.player.prevYaw = entityRotation;
+                        client.player.prevPitch = 0;
+                        client.player.prevBodyYaw = entityRotation;
+                        client.player.prevHeadYaw = entityRotation;
+
+                        net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity(
+                            context,
+                            centerX - 50, centerY - 80,
+                            centerX + 50, centerY + 80,
+                            size,
+                            0.0625f,
+                            centerX,
+                            centerY - 30, // Looking straight
+                            client.player
+                        );
+
+                        // Restore player rotation
+                        client.player.setYaw(oldYaw);
+                        client.player.setPitch(oldPitch);
+                        client.player.bodyYaw = oldBodyYaw;
+                        client.player.headYaw = oldHeadYaw;
+                        client.player.prevYaw = oldPrevYaw;
+                        client.player.prevPitch = oldPrevPitch;
+                        client.player.prevBodyYaw = oldPrevBodyYaw;
+                        client.player.prevHeadYaw = oldPrevHeadYaw;
+
+                        rendered = true;
+                    } catch (Exception e) {
+                        rendered = false;
+                    }
+                }
+
+                if (!rendered) {
+                    // Try actual 3D model rendering (works without joining a world)
+                    if (!render3DPlayerModel(context, skinTex, entityRotation, rightX + rightW / 2, rightY + rightH / 2 + 10, rightH)) {
+                        // Fallback to 2D rendering
+                        float skinScale = 1.4f;
+                        int skinH = (int) (64 * skinScale);
+                        int skinCenterY = rightY + (rightH - skinH) / 2 + 10;
+                        render25DCharacter(context, skinTex, rightX + rightW / 2, skinCenterY, skinScale);
+                    }
                 }
             } else {
                 context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§7Loading skin..."), rightX + rightW / 2, rightY + rightH / 2, 0xFFFFFF);
@@ -482,12 +537,12 @@ public class ProfileScreen extends Screen {
             context.draw();
 
             // Calculate scale to fit panel height (~32 model units for a player)
-            float scale = panelHeight * 0.11f; // scale to fit nicely
+            float scale = (panelHeight - 40) / 32f;
 
             context.getMatrices().push();
 
-            // Position model at screen coordinates
-            context.getMatrices().translate(centerX, centerY, 50.0f);
+            // Position model at screen coordinates (pivot offset to middle of torso at y=8)
+            context.getMatrices().translate(centerX, centerY - 8 * scale, 50.0f);
 
             // Scale: positive Y goes down in screen space, but model has Y-up, so negate Y
             context.getMatrices().scale(scale, -scale, scale);
@@ -531,6 +586,25 @@ public class ProfileScreen extends Screen {
         resetPart(playerModel.leftArm);
         resetPart(playerModel.rightLeg);
         resetPart(playerModel.leftLeg);
+        
+        resetPart(playerModel.jacket);
+        resetPart(playerModel.leftSleeve);
+        resetPart(playerModel.rightSleeve);
+        resetPart(playerModel.leftPants);
+        resetPart(playerModel.rightPants);
+
+        playerModel.head.visible = true;
+        playerModel.hat.visible = true;
+        playerModel.body.visible = true;
+        playerModel.rightArm.visible = true;
+        playerModel.leftArm.visible = true;
+        playerModel.rightLeg.visible = true;
+        playerModel.leftLeg.visible = true;
+        playerModel.jacket.visible = true;
+        playerModel.leftSleeve.visible = true;
+        playerModel.rightSleeve.visible = true;
+        playerModel.leftPants.visible = true;
+        playerModel.rightPants.visible = true;
     }
 
     private void resetPart(ModelPart part) {
