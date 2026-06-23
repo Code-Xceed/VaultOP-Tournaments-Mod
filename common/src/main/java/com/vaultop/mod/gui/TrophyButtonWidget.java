@@ -2,7 +2,9 @@ package com.vaultop.mod.gui;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
 public class TrophyButtonWidget extends ButtonWidget {
     public TrophyButtonWidget(int x, int y, PressAction onPress) {
@@ -21,26 +23,7 @@ public class TrophyButtonWidget extends ButtonWidget {
 
         TournamentListScreen.drawPremiumBeveledBox(context, this.getX(), this.getY(), this.width, this.height, bgColor, hl, sh);
         
-        int cx = this.getX() + 10;
-        int cy = this.getY() + 10;
-        int gold = hovered ? 0xFFFFFFFF : 0xFFFFD700;
-        int darkGold = hovered ? 0xFFAAAAAA : 0xFFB8860B;
-
-        // Draw pixel trophy cup icon
-        // Cup bowl
-        context.fill(cx - 3, cy - 4, cx + 4, cy - 1, gold);
-        // Cup rim
-        context.fill(cx - 4, cy - 5, cx + 5, cy - 4, gold);
-        
-        // Handles
-        context.fill(cx - 5, cy - 4, cx - 4, cy - 2, gold);
-        context.fill(cx + 4, cy - 4, cx + 5, cy - 2, gold);
-        
-        // Stem
-        context.fill(cx - 1, cy - 1, cx + 2, cy + 2, gold);
-        
-        // Base
-        context.fill(cx - 3, cy + 2, cx + 4, cy + 4, darkGold);
-        context.fill(cx - 4, cy + 3, cx + 5, cy + 4, gold);
+        Identifier logoTex = Identifier.of("vaultop", "textures/gui/logo.png");
+        context.drawTexture(RenderLayer::getGuiTextured, logoTex, this.getX() + 2, this.getY() + 2, 0f, 0f, this.width - 4, this.height - 4, this.width - 4, this.height - 4);
     }
 }
