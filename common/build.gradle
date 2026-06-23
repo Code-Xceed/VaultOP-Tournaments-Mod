@@ -7,8 +7,5 @@ repositories {
 }
 
 dependencies {
-    compileOnly('com.github.MinnDevelopment:java-discord-rpc:v2.0.2') {
-        exclude group: 'club.minnced', module: 'discord-rpc-release'
-    }
-    compileOnly 'com.github.MinnDevelopment:discord-rpc-release:3.4.0'
+    compileOnly 'club.minnced:java-discord-rpc:2.0.2'
 }

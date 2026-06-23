@@ -8,10 +8,7 @@ repositories {
 
 dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${gradle.ext.fabric_api_version}"
-    implementation('com.github.MinnDevelopment:java-discord-rpc:v2.0.2') {
-        exclude group: 'club.minnced', module: 'discord-rpc-release'
-    }
-    implementation 'com.github.MinnDevelopment:discord-rpc-release:3.4.0'
-    include 'com.github.MinnDevelopment:java-discord-rpc:v2.0.2'
-    include 'com.github.MinnDevelopment:discord-rpc-release:3.4.0'
+    implementation 'club.minnced:java-discord-rpc:2.0.2'
+    include 'club.minnced:java-discord-rpc:2.0.2'
+    include 'club.minnced:discord-rpc-release:v3.4.0'
 }
