@@ -3,7 +3,6 @@ package com.vaultop.mod.protectedmode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.vaultop.mod.VaultOPMod;
-import com.vaultop.mod.gui.ResourcePackBlockScreen;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
@@ -20,6 +19,8 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class ProtectedModeManager {
+    public static boolean enforceResourcePacks = false;
+
     public static class ModInfo {
         public final String id;
         public final String version;
@@ -210,130 +211,71 @@ public class ProtectedModeManager {
                 });
     }
 
-    private static String lastServerAddress = null;
-    private static boolean activeRestrictResourcePacks = false;
-    private static long lastCheckTime = 0;
-    private static boolean isFetchingConfig = false;
-
-    public static boolean isActiveRestrictResourcePacks() {
-        return activeRestrictResourcePacks;
-    }
-
-    public static void setActiveRestrictResourcePacks(boolean active) {
-        activeRestrictResourcePacks = active;
-        if (!active) {
-            lastServerAddress = null;
-        }
-    }
-
-    public static void tick(MinecraftClient client) {
-        if (client.world == null || client.player == null) {
-            lastServerAddress = null;
-            activeRestrictResourcePacks = false;
-            return;
-        }
-
-        if (client.getCurrentServerEntry() == null) {
-            lastServerAddress = null;
-            activeRestrictResourcePacks = false;
-            return;
-        }
-
-        String currentAddress = client.getCurrentServerEntry().address;
-        
-        if (lastServerAddress == null || !lastServerAddress.equalsIgnoreCase(currentAddress)) {
-            lastServerAddress = currentAddress;
-            activeRestrictResourcePacks = false; 
-            fetchTournamentConfigForServer(currentAddress);
-        }
-
-        long now = System.currentTimeMillis();
-        if (activeRestrictResourcePacks && (now - lastCheckTime > 1000)) { 
-            lastCheckTime = now;
-            runRuntimeResourcePackCheck(client);
-        }
-    }
-
-    private static void fetchTournamentConfigForServer(String address) {
-        if (isFetchingConfig) return;
-        isFetchingConfig = true;
-
-        final String cleanAddress = address.contains(":") ? address.split(":")[0] : address;
-
-        VaultOPMod.getInstance().getRestClient().fetchTournaments().thenAccept(tournaments -> {
-            isFetchingConfig = false;
-            for (int i = 0; i < tournaments.size(); i++) {
-                try {
-                    JsonObject tourney = tournaments.get(i).getAsJsonObject();
-                    if (tourney.has("serverIp") && !tourney.get("serverIp").isJsonNull()) {
-                        String tourneyIp = tourney.get("serverIp").getAsString();
-                        String cleanTourneyIp = tourneyIp.contains(":") ? tourneyIp.split(":")[0] : tourneyIp;
-                        
-                        boolean isLocal = cleanAddress.equals("localhost") || cleanAddress.equals("127.0.0.1");
-                        boolean ipMatches = cleanAddress.equalsIgnoreCase(cleanTourneyIp) || 
-                                            (isLocal && (cleanTourneyIp.equals("localhost") || cleanTourneyIp.equals("127.0.0.1") || cleanTourneyIp.isEmpty()));
-
-                        if (ipMatches) {
-                            String tId = tourney.get("id").getAsString();
-                            VaultOPMod.getInstance().getRestClient().fetchProtectedConfig(tId).thenAccept(config -> {
-                                boolean restrict = config.has("restrictResourcePacks") && config.get("restrictResourcePacks").getAsBoolean();
-                                activeRestrictResourcePacks = restrict;
-                                VaultOPMod.LOGGER.info("[VaultOP] Server matches tournament " + tId + ". RestrictResourcePacks: " + restrict);
-                            }).exceptionally(ex -> {
-                                VaultOPMod.LOGGER.error("Failed to fetch protected config: " + ex.getMessage());
-                                return null;
-                            });
-                            break;
-                        }
-                    }
-                } catch (Exception e) {
-                    VaultOPMod.LOGGER.error("Error processing tournament element: " + e.getMessage());
-                }
-            }
-        }).exceptionally(ex -> {
-            isFetchingConfig = false;
-            VaultOPMod.LOGGER.error("Failed to fetch tournaments for server verification: " + ex.getMessage());
-            return null;
-        });
-    }
-
-    private static void runRuntimeResourcePackCheck(MinecraftClient client) {
+    public static List<String> getViolatingResourcePacks() {
         List<String> violatingPacks = new ArrayList<>();
         try {
-            ResourcePackManager manager = client.getResourcePackManager();
-            if (manager != null) {
-                for (String id : manager.getEnabledIds()) {
-                    ResourcePackProfile profile = manager.getProfile(id);
-                    if (profile != null) {
-                        ResourcePackSource source = profile.getSource();
-                        if (source != ResourcePackSource.BUILTIN && 
-                            source != ResourcePackSource.SERVER) {
-                            violatingPacks.add(profile.getDisplayName().getString());
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client != null) {
+                ResourcePackManager manager = client.getResourcePackManager();
+                if (manager != null) {
+                    for (String id : manager.getEnabledIds()) {
+                        ResourcePackProfile profile = manager.getProfile(id);
+                        if (profile != null) {
+                            ResourcePackSource source = profile.getSource();
+                            if (source != ResourcePackSource.BUILTIN && source != ResourcePackSource.SERVER) {
+                                violatingPacks.add(profile.getDisplayName().getString());
+                            }
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            VaultOPMod.LOGGER.error("Failed to scan runtime client resource packs: " + e.getMessage());
+            // Ignore
         }
+        return violatingPacks;
+    }
 
-        if (!violatingPacks.isEmpty()) {
-            client.execute(() -> {
-                if (client.currentScreen instanceof ResourcePackBlockScreen) {
-                    ResourcePackBlockScreen blockScreen = (ResourcePackBlockScreen) client.currentScreen;
-                    if (!blockScreen.getViolatingPacks().equals(violatingPacks)) {
-                        client.setScreen(new ResourcePackBlockScreen(violatingPacks));
+    public static void handlePayloadPacket(Object packet) {
+        try {
+            Object payload = packet.getClass().getMethod("payload").invoke(packet);
+            if (payload != null) {
+                Object payloadIdObj = payload.getClass().getMethod("id").invoke(payload);
+                if (payloadIdObj != null) {
+                    Object identifier = payloadIdObj.getClass().getMethod("id").invoke(payloadIdObj);
+                    if (identifier != null) {
+                        String channelStr = identifier.toString();
+                        if ("vaultop:restrict_packs_on".equals(channelStr)) {
+                            enforceResourcePacks = true;
+                        } else if ("vaultop:restrict_packs_off".equals(channelStr)) {
+                            enforceResourcePacks = false;
+                        }
                     }
-                } else if (!(client.currentScreen instanceof net.minecraft.client.gui.screen.pack.PackScreen)) {
-                    client.setScreen(new ResourcePackBlockScreen(violatingPacks));
                 }
-            });
-        } else {
-            client.execute(() -> {
-                if (client.currentScreen instanceof ResourcePackBlockScreen) {
-                    client.setScreen(null);
+            }
+        } catch (Throwable t) {
+            try {
+                java.lang.reflect.Field payloadField = packet.getClass().getDeclaredField("payload");
+                payloadField.setAccessible(true);
+                Object payload = payloadField.get(packet);
+                if (payload != null) {
+                    java.lang.reflect.Field idField = payload.getClass().getDeclaredField("id");
+                    idField.setAccessible(true);
+                    Object payloadIdObj = idField.get(payload);
+                    if (payloadIdObj != null) {
+                        java.lang.reflect.Field identifierField = payloadIdObj.getClass().getDeclaredField("id");
+                        identifierField.setAccessible(true);
+                        Object identifier = identifierField.get(payloadIdObj);
+                        if (identifier != null) {
+                            String channelStr = identifier.toString();
+                            if ("vaultop:restrict_packs_on".equals(channelStr)) {
+                                enforceResourcePacks = true;
+                            } else if ("vaultop:restrict_packs_off".equals(channelStr)) {
+                                enforceResourcePacks = false;
+                            }
+                        }
+                    }
                 }
-            });
+            } catch (Throwable ignored) {}
         }
     }
 }

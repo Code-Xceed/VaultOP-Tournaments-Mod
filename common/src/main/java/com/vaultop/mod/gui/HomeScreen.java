@@ -41,7 +41,7 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
         int btnH = 18;
         int spacing = 4;
         
-        int startY = this.height - 10 - (3 * btnH) - (2 * spacing);
+        int startY = this.height - 10 - (2 * btnH) - (1 * spacing);
 
         this.addDrawableChild(new PremiumButtonWidget(10, startY, btnW, btnH, Text.literal("Tournaments"), button -> {
             this.client.setScreen(new TournamentListScreen(this));
@@ -49,10 +49,6 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
 
         this.addDrawableChild(new PremiumButtonWidget(10, startY + btnH + spacing, btnW, btnH, Text.literal("Profile"), button -> {
             this.client.setScreen(new ProfileScreen(this));
-        }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
-
-        this.addDrawableChild(new PremiumButtonWidget(10, startY + (2 * (btnH + spacing)), btnW, btnH, Text.literal("Leaderboard"), button -> {
-            this.client.setScreen(new LeaderboardScreen(this));
         }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
     }
 
