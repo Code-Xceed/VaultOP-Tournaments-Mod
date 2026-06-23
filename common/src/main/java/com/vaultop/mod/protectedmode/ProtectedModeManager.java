@@ -126,8 +126,10 @@ public class ProtectedModeManager {
                             continue;
                         }
 
-                        // Always allow basic fabric libraries unless strict mode requires otherwise
-                        if (mod.id.startsWith("fabric-") || mod.id.equals("fabric")) {
+                        // Always allow basic fabric libraries and common library dependencies unless strict mode requires otherwise
+                        if (mod.id.startsWith("fabric-") || mod.id.equals("fabric") || 
+                            mod.id.equals("mixinextras") || mod.id.equals("architectury") || 
+                            mod.id.equals("fabric-language-kotlin") || mod.id.equals("kotlin")) {
                             continue;
                         }
 

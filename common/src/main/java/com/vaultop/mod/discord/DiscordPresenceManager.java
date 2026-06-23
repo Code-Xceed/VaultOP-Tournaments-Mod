@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class DiscordPresenceManager {
-    private static final String CLIENT_ID = "1517400659505319976";
+    private static final String CLIENT_ID = "1518987034604077116";
     private static boolean initialized = false;
     private static Thread workerThread;
     private static final LinkedBlockingQueue<PresenceUpdate> queue = new LinkedBlockingQueue<>();
