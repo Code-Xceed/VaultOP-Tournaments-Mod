@@ -54,13 +54,19 @@ public class ProfileScreen extends Screen {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private void ensureModelInit() {
-        if (modelInitAttempted) return;
-        modelInitAttempted = true;
+        if (playerModel != null) return;
         try {
-            ModelPart root = MinecraftClient.getInstance().getLoadedEntityModels().getModelPart(EntityModelLayers.PLAYER);
+            var client = MinecraftClient.getInstance();
+            var loadedModels = client.getLoadedEntityModels();
+            if (loadedModels == null) {
+                VaultOPMod.LOGGER.info("[ProfileScreen] LoadedEntityModels is null, skipping init (will retry)");
+                return;
+            }
+            ModelPart root = loadedModels.getModelPart(EntityModelLayers.PLAYER);
             playerModel = new PlayerEntityModel(root, false);
+            VaultOPMod.LOGGER.info("[ProfileScreen] Successfully initialized 3D player model.");
         } catch (Exception e) {
-            // Model loading failed - will use 2D fallback
+            VaultOPMod.LOGGER.error("[ProfileScreen] Failed to initialize 3D player model:", e);
         }
     }
 
