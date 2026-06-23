@@ -15,6 +15,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 
 import com.vaultop.mod.api.WebSocketMessageListener;
+import com.vaultop.mod.protectedmode.ProtectedModeManager;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -251,12 +252,26 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
 
     private void joinServer() {
         if (serverIp.isEmpty()) return;
-        
-        ServerInfo info = new ServerInfo("VaultOP Tournament Server", serverIp, ServerInfo.ServerType.OTHER);
-        ServerAddress address = ServerAddress.parse(serverIp);
-        
-        this.client.execute(() -> {
-            ConnectScreen.connect(this, this.client, address, info, false, null);
+
+        // Run client environment verification check before connecting
+        ProtectedModeManager.verify(tournamentId).thenAccept(result -> {
+            this.client.execute(() -> {
+                if (result.compliant) {
+                    ServerInfo info = new ServerInfo("VaultOP Tournament Server", serverIp, ServerInfo.ServerType.OTHER);
+                    ServerAddress address = ServerAddress.parse(serverIp);
+                    ConnectScreen.connect(this, this.client, address, info, false, null);
+                } else {
+                    this.client.setScreen(new ProtectedModeScreen(this, tournamentId, result.violatingMods, result.violatingPacks));
+                }
+            });
+        }).exceptionally(ex -> {
+            // Fallback: connect anyway if verification fails due to networking/auth issues
+            this.client.execute(() -> {
+                ServerInfo info = new ServerInfo("VaultOP Tournament Server", serverIp, ServerInfo.ServerType.OTHER);
+                ServerAddress address = ServerAddress.parse(serverIp);
+                ConnectScreen.connect(this, this.client, address, info, false, null);
+            });
+            return null;
         });
     }
 

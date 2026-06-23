@@ -155,7 +155,7 @@ public class ProfileScreen extends Screen {
             int leftW = (int) (panelW * 0.50) - 10;
             int leftH = panelH - 16;
 
-            int leftTopH = 70;
+            int leftTopH = 76;
             int leftBotY = leftY + leftTopH + 10;
             int leftBotH = leftH - leftTopH - 10;
 
@@ -164,17 +164,17 @@ public class ProfileScreen extends Screen {
 
             for (JsonObject event : registeredEvents) {
                 int cardY = eventY;
-                boolean isBtnVisible = (cardY >= leftBotY + 22 && cardY + 46 <= leftBotY + leftBotH - 8);
+                boolean isBtnVisible = (cardY >= leftBotY + 22 && cardY + 42 <= leftBotY + leftBotH - 8);
                 
                 if (isBtnVisible) {
                     int viewBtnX = leftX + 12 + cardW - 40;
-                    int viewBtnY = cardY + 14;
+                    int viewBtnY = cardY + 13;
                     
                     this.addDrawableChild(new PremiumButtonWidget(viewBtnX, viewBtnY, 34, 16, Text.literal("View"), button -> {
                         this.client.setScreen(new TournamentDetailScreen(this, event));
                     }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
                 }
-                eventY += 50;
+                eventY += 54;
             }
         }
     }
@@ -232,13 +232,13 @@ public class ProfileScreen extends Screen {
         int leftW = (int) (panelW * 0.50) - 10;
         int leftH = panelH - 16;
 
-        int leftTopH = 70;
+        int leftTopH = 76;
         int leftBotY = leftY + leftTopH + 10;
         int leftBotH = leftH - leftTopH - 10;
 
         if (mouseX >= leftX && mouseX <= leftX + leftW && mouseY >= leftBotY && mouseY <= leftBotY + leftBotH) {
             int scrollAreaH = leftBotH - 28;
-            int totalHeight = registeredEvents.size() * 50;
+            int totalHeight = registeredEvents.size() * 54;
             int maxScroll = Math.max(0, totalHeight - scrollAreaH);
             if (verticalAmount != 0) {
                 rightScrollOffset -= (int) Math.signum(verticalAmount) * 15;
@@ -299,7 +299,7 @@ public class ProfileScreen extends Screen {
             int leftY = panelY + 8;
             int leftW = (int) (panelW * 0.50) - 10;
             int leftH = panelH - 16;
-            int leftTopH = 70;
+            int leftTopH = 76;
             int leftBotY = leftY + leftTopH + 10;
             int leftBotH = leftH - leftTopH - 10;
 
@@ -307,8 +307,8 @@ public class ProfileScreen extends Screen {
             TournamentListScreen.drawPremiumBeveledBox(context, leftX, leftY, leftW, leftTopH, 0x8005080E, 0x20FFFFFF, 0x10FFFFFF);
 
             int avatarX = leftX + 16;
-            int avatarY = leftY + 14;
-            int avatarSize = 40;
+            int avatarY = leftY + 17;
+            int avatarSize = 42;
             TournamentListScreen.drawPremiumBeveledBox(context, avatarX - 2, avatarY - 2, avatarSize + 4, avatarSize + 4, 0xFF080808, 0x40FFFFFF, 0x20FFFFFF);
 
             Identifier avatarTex = null;
@@ -330,7 +330,7 @@ public class ProfileScreen extends Screen {
             }
 
             int infoX = avatarX + avatarSize + 14;
-            int infoY = avatarY + 4;
+            int infoY = avatarY + 2;
 
             String truncatedName = discordUser;
             int maxNameWidth = leftW - (avatarSize + 50);
@@ -343,8 +343,8 @@ public class ProfileScreen extends Screen {
             if (!"Not Linked".equalsIgnoreCase(ign) && !ign.isEmpty()) {
                 ignDisplay += " §8(§b" + accountType.toLowerCase() + "§8)";
             }
-            context.drawTextWithShadow(this.textRenderer, Text.literal(ignDisplay), infoX, infoY + 14, 0xFFFFFF);
-            context.drawTextWithShadow(this.textRenderer, Text.literal("§7Status: §aCONNECTED"), infoX, infoY + 26, 0xFFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal(ignDisplay), infoX, infoY + 13, 0xFFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("§7Status: §aCONNECTED"), infoX, infoY + 24, 0xFFFFFF);
 
             // ── REGISTERED EVENTS ──
             TournamentListScreen.drawPremiumBeveledBox(context, leftX, leftBotY, leftW, leftBotH, 0x8005080E, 0x2055FF55, 0x1055FF55);
@@ -449,36 +449,28 @@ public class ProfileScreen extends Screen {
                 if (client.player != null) {
                     try {
                         int centerX = rightX + rightW / 2;
-                        int centerY = rightY + rightH / 2 + 35; // Shift down slightly so feet fit
-                        int size = (int) (rightH * 0.38f); // Scale factor for player model
+                        int centerY = rightY + rightH / 2 + 25; // Shift down slightly
+                        int size = (int) (rightH * 0.31f); // Make it a little bit smaller (from 0.38f)
 
                         // Temporarily rotate the client player entity for rendering
                         float oldYaw = client.player.getYaw();
                         float oldPitch = client.player.getPitch();
                         float oldBodyYaw = client.player.bodyYaw;
                         float oldHeadYaw = client.player.headYaw;
-                        float oldPrevYaw = client.player.prevYaw;
-                        float oldPrevPitch = client.player.prevPitch;
-                        float oldPrevBodyYaw = client.player.prevBodyYaw;
-                        float oldPrevHeadYaw = client.player.prevHeadYaw;
 
                         client.player.setYaw(entityRotation);
                         client.player.setPitch(0);
                         client.player.bodyYaw = entityRotation;
                         client.player.headYaw = entityRotation;
-                        client.player.prevYaw = entityRotation;
-                        client.player.prevPitch = 0;
-                        client.player.prevBodyYaw = entityRotation;
-                        client.player.prevHeadYaw = entityRotation;
 
                         net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity(
                             context,
-                            centerX - 50, centerY - 80,
-                            centerX + 50, centerY + 80,
+                            centerX - 50, centerY - 65,
+                            centerX + 50, centerY + 65,
                             size,
                             0.0625f,
                             centerX,
-                            centerY - 30, // Looking straight
+                            centerY - 25, // Looking straight
                             client.player
                         );
 
@@ -487,10 +479,6 @@ public class ProfileScreen extends Screen {
                         client.player.setPitch(oldPitch);
                         client.player.bodyYaw = oldBodyYaw;
                         client.player.headYaw = oldHeadYaw;
-                        client.player.prevYaw = oldPrevYaw;
-                        client.player.prevPitch = oldPrevPitch;
-                        client.player.prevBodyYaw = oldPrevBodyYaw;
-                        client.player.prevHeadYaw = oldPrevHeadYaw;
 
                         rendered = true;
                     } catch (Exception e) {
@@ -536,16 +524,16 @@ public class ProfileScreen extends Screen {
             // Flush any pending GUI draw calls so they render behind the model
             context.draw();
 
-            // Calculate scale to fit panel height (~32 model units for a player)
-            float scale = (panelHeight - 40) / 32f;
+            // Calculate scale to fit panel height (player is ~2.0 blocks tall in model space)
+            float scale = (panelHeight - 30) / 2.0f;
 
             context.getMatrices().push();
 
-            // Position model at screen coordinates (pivot offset to middle of torso at y=8)
-            context.getMatrices().translate(centerX, centerY - 8 * scale, 50.0f);
+            // Position model at screen coordinates (pivot offset to middle of torso at y=0.5 blocks)
+            context.getMatrices().translate(centerX, centerY - 0.5f * scale, 50.0f);
 
-            // Scale: positive Y goes down in screen space, but model has Y-up, so negate Y
-            context.getMatrices().scale(scale, -scale, scale);
+            // Scale: positive Y goes down in screen space, and model coordinates have positive Y going down
+            context.getMatrices().scale(scale, scale, scale);
 
             // Apply user rotation
             Quaternionf bodyRot = new Quaternionf().rotateY((float) Math.toRadians(rotation));

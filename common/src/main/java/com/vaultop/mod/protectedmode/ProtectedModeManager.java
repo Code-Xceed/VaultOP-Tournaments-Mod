@@ -6,6 +6,10 @@ import com.vaultop.mod.VaultOPMod;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.resource.ResourcePackManager;
+import net.minecraft.resource.ResourcePackProfile;
+import net.minecraft.resource.ResourcePackSource;
 
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -32,10 +36,12 @@ public class ProtectedModeManager {
     public static class VerificationResult {
         public final boolean compliant;
         public final List<ModInfo> violatingMods;
+        public final List<String> violatingPacks;
 
-        public VerificationResult(boolean compliant, List<ModInfo> violatingMods) {
+        public VerificationResult(boolean compliant, List<ModInfo> violatingMods, List<String> violatingPacks) {
             this.compliant = compliant;
             this.violatingMods = violatingMods;
+            this.violatingPacks = violatingPacks;
         }
     }
 
@@ -97,7 +103,9 @@ public class ProtectedModeManager {
     public static CompletableFuture<VerificationResult> verify(String tournamentId) {
         return VaultOPMod.getInstance().getRestClient().fetchProtectedConfig(tournamentId)
                 .thenApply(config -> {
-                    // Config format: { "allowedMods": [{"id": "sodium", "hash": "optional_hash"}] }
+                    // Config format: { "restrictResourcePacks": true, "allowedMods": [{"id": "sodium", "hash": "optional_hash"}] }
+                    boolean restrictResourcePacks = config.has("restrictResourcePacks") && config.get("restrictResourcePacks").getAsBoolean();
+                    
                     JsonArray allowedArray = config.getAsJsonArray("allowedMods");
                     Map<String, JsonObject> allowedMap = new HashMap<>();
                     if (allowedArray != null) {
@@ -134,11 +142,56 @@ public class ProtectedModeManager {
                         }
                     }
 
-                    boolean compliant = violating.isEmpty();
+                    // Scan resource packs if restricted
+                    List<String> violatingPacks = new ArrayList<>();
+                    if (restrictResourcePacks) {
+                        try {
+                            ResourcePackManager manager = MinecraftClient.getInstance().getResourcePackManager();
+                            if (manager != null) {
+                                for (String id : manager.getEnabledIds()) {
+                                    ResourcePackProfile profile = manager.getProfile(id);
+                                    if (profile != null) {
+                                        ResourcePackSource source = profile.getSource();
+                                        if (source != ResourcePackSource.BUILTIN && source != ResourcePackSource.SERVER) {
+                                            violatingPacks.add(profile.getDisplayName().getString());
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            VaultOPMod.LOGGER.error("Failed to scan client resource packs: " + e.getMessage());
+                        }
+                    }
+
+                    boolean compliant = violating.isEmpty() && violatingPacks.isEmpty();
+
+                    // Build descriptive reason if non-compliant
+                    StringBuilder reasonBuilder = new StringBuilder();
+                    if (!violating.isEmpty()) {
+                        reasonBuilder.append("Unapproved mods detected (");
+                        for (int i = 0; i < violating.size(); i++) {
+                            reasonBuilder.append(violating.get(i).id);
+                            if (i < violating.size() - 1) reasonBuilder.append(", ");
+                        }
+                        reasonBuilder.append("). ");
+                    }
+                    if (!violatingPacks.isEmpty()) {
+                        reasonBuilder.append("Custom resource packs are not allowed. Please disable: ");
+                        for (int i = 0; i < violatingPacks.size(); i++) {
+                            reasonBuilder.append(violatingPacks.get(i));
+                            if (i < violatingPacks.size() - 1) reasonBuilder.append(", ");
+                        }
+                        reasonBuilder.append(".");
+                    }
+                    String reason = reasonBuilder.toString().trim();
 
                     // Send result back to server
                     JsonObject logPayload = new JsonObject();
                     logPayload.addProperty("compliant", compliant);
+                    if (!reason.isEmpty()) {
+                        logPayload.addProperty("reason", reason);
+                    }
+                    
                     JsonArray violatingJson = new JsonArray();
                     for (ModInfo v : violating) {
                         JsonObject vObj = new JsonObject();
@@ -152,7 +205,7 @@ public class ProtectedModeManager {
                     String token = VaultOPMod.getInstance().getSessionManager().getSessionToken();
                     VaultOPMod.getInstance().getRestClient().submitVerificationLog(tournamentId, token, logPayload);
 
-                    return new VerificationResult(compliant, violating);
+                    return new VerificationResult(compliant, violating, violatingPacks);
                 });
     }
 }

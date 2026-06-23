@@ -14,13 +14,15 @@ public class ProtectedModeScreen extends Screen {
     private final Screen parent;
     private final String tournamentId;
     private final List<ProtectedModeManager.ModInfo> violatingMods;
+    private final List<String> violatingPacks;
     private String statusText = "";
 
-    public ProtectedModeScreen(Screen parent, String tournamentId, List<ProtectedModeManager.ModInfo> violatingMods) {
+    public ProtectedModeScreen(Screen parent, String tournamentId, List<ProtectedModeManager.ModInfo> violatingMods, List<String> violatingPacks) {
         super(Text.literal("Protected Mode Violation"));
         this.parent = parent;
         this.tournamentId = tournamentId;
         this.violatingMods = violatingMods;
+        this.violatingPacks = violatingPacks;
     }
 
     @Override
@@ -42,7 +44,7 @@ public class ProtectedModeScreen extends Screen {
                     this.client.setScreen(this.parent);
                 } else {
                     statusText = "Still non-compliant.";
-                    this.client.setScreen(new ProtectedModeScreen(this.parent, tournamentId, result.violatingMods));
+                    this.client.setScreen(new ProtectedModeScreen(this.parent, tournamentId, result.violatingMods, result.violatingPacks));
                 }
             });
         }).exceptionally(ex -> {
@@ -66,24 +68,43 @@ public class ProtectedModeScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderBackground(context, mouseX, mouseY, delta);
 
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("PROTECTED MODE VIOLATION"), this.width / 2, 20, 0xFF5555);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Unapproved mod environment detected. Tournament server access locked."), this.width / 2, 40, 0xAAAAAA);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("PROTECTED MODE VIOLATION"), this.width / 2, 15, 0xFF5555);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Unapproved mods or custom resource packs detected."), this.width / 2, 30, 0xAAAAAA);
 
         if (!statusText.isEmpty()) {
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(statusText), this.width / 2, 55, 0xFFFF55);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(statusText), this.width / 2, 45, 0xFFFF55);
         }
 
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Unapproved Mods Found:"), this.width / 2, 80, 0xFFFFFF);
+        int currentY = 65;
 
-        int startY = 100;
-        for (int i = 0; i < Math.min(violatingMods.size(), 8); i++) {
-            ProtectedModeManager.ModInfo mod = violatingMods.get(i);
-            String display = mod.id + " (" + mod.filename + ")";
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(display), this.width / 2, startY + (i * 12), 0xFF5555);
+        if (!violatingMods.isEmpty()) {
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Unapproved Mods Found:"), this.width / 2, currentY, 0xFFFFFF);
+            currentY += 12;
+            for (int i = 0; i < Math.min(violatingMods.size(), 5); i++) {
+                ProtectedModeManager.ModInfo mod = violatingMods.get(i);
+                String display = mod.id + " (" + mod.filename + ")";
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(display), this.width / 2, currentY, 0xFF5555);
+                currentY += 12;
+            }
+            if (violatingMods.size() > 5) {
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("... and " + (violatingMods.size() - 5) + " more mods"), this.width / 2, currentY, 0xAAAAAA);
+                currentY += 12;
+            }
+            currentY += 5;
         }
 
-        if (violatingMods.size() > 8) {
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("... and " + (violatingMods.size() - 8) + " more mods"), this.width / 2, startY + 96, 0xAAAAAA);
+        if (!violatingPacks.isEmpty()) {
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Custom Resource Packs Not Allowed:"), this.width / 2, currentY, 0xFFFFFF);
+            currentY += 12;
+            for (int i = 0; i < Math.min(violatingPacks.size(), 5); i++) {
+                String packName = violatingPacks.get(i);
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(packName), this.width / 2, currentY, 0xFF5555);
+                currentY += 12;
+            }
+            if (violatingPacks.size() > 5) {
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("... and " + (violatingPacks.size() - 5) + " more packs"), this.width / 2, currentY, 0xAAAAAA);
+                currentY += 12;
+            }
         }
 
         super.render(context, mouseX, mouseY, delta);
