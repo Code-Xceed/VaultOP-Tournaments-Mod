@@ -26,6 +26,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
     
     private PremiumButtonWidget joinButton;
     private PremiumButtonWidget registerButton;
+    private PremiumButtonWidget watchLiveButton;
     
     private String serverIp = "";
     private boolean matchStarted = false;
@@ -215,6 +216,10 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
         this.registerButton.visible = false;
         this.addDrawableChild(this.registerButton);
 
+        this.watchLiveButton = new PremiumButtonWidget(0, 0, 100, 20, Text.literal("Watch Live"), button -> watchLiveStream(), 0xFFC62828, 0xFF5F0C10, 0xFFE57373);
+        this.watchLiveButton.visible = false;
+        this.addDrawableChild(this.watchLiveButton);
+
         // Fetch real-time registration status
         fetchFreshStatus();
 
@@ -247,6 +252,15 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
         if (!tournamentId.isEmpty()) {
             String webUrl = VaultOPMod.getInstance().getConfigManager().getWebsiteUrl();
             Util.getOperatingSystem().open(webUrl + "/tournaments/" + tournamentId + "/register");
+        }
+    }
+
+    private void watchLiveStream() {
+        if (tournament.has("streamUrl") && !tournament.get("streamUrl").isJsonNull()) {
+            String url = tournament.get("streamUrl").getAsString();
+            if (!url.isEmpty()) {
+                Util.getOperatingSystem().open(url);
+            }
         }
     }
 
@@ -457,6 +471,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
         if ("OVERVIEW".equals(activeTab)) {
             joinButton.visible = false;
             registerButton.visible = false;
+            watchLiveButton.visible = false;
 
             // Left Overview Panel
             TournamentListScreen.drawPremiumBeveledBox(context, 20, renderY, leftWidth, Math.max(scissorHeight, 200), 0x9F080C14, 0x30FFFFFF, 0x15FFFFFF);
@@ -487,6 +502,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
         } else if ("RULES".equals(activeTab)) {
             joinButton.visible = false;
             registerButton.visible = false;
+            watchLiveButton.visible = false;
 
             // Left Rules Card
             int leftPanelH = Math.max(scissorHeight, 30 + rules.size() * 12);
@@ -598,8 +614,9 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
             boolean isServerJoinable = matchStarted || !serverIp.isEmpty();
             int btnY = renderY + 70;
             boolean btnVisible = (btnY >= 145 && btnY + 20 <= this.height - 20);
+            boolean firstBtnVisible = false;
 
-            if ("APPROVED".equals(userStatus) && isServerJoinable) {
+            if ("APPROVED".equals(userStatus) && "ONGOING".equals(status) && isServerJoinable) {
                 context.fill(rightX + 8, renderY + 26, rightX + rightWidth - 8, renderY + 58, 0x114CAF50);
                 context.drawTextWithShadow(this.textRenderer, Text.literal("SERVER STATUS: ONLINE"), rightX + 14, renderY + 32, 0xFF4CAF50);
                 context.drawTextWithShadow(this.textRenderer, Text.literal("Matches are in progress. Join now!"), rightX + 14, renderY + 44, 0x999999);
@@ -610,6 +627,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
                 joinButton.setWidth(rightWidth - 16);
                 joinButton.setHeight(20);
                 registerButton.visible = false;
+                firstBtnVisible = btnVisible;
 
                 // Pulsing glow border around button
                 float pulse = (float) (Math.sin(time / 200.0) + 1.0) / 2.0f;
@@ -631,7 +649,8 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
                 registerButton.setWidth(rightWidth - 16);
                 registerButton.setHeight(20);
                 joinButton.visible = false;
-            } else if ("PENDING".equals(userStatus)) {
+                firstBtnVisible = btnVisible;
+            } else if ("PENDING".equals(userStatus) && !"COMPLETED".equals(status)) {
                 context.drawTextWithShadow(this.textRenderer, Text.literal("Your status is pending."), rightX + 8, renderY + 26, 0xFFFF9800);
                 context.drawTextWithShadow(this.textRenderer, Text.literal("You will connect here once approved."), rightX + 8, renderY + 38, 0x999999);
 
@@ -643,6 +662,18 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
                 registerButton.setWidth(rightWidth - 16);
                 registerButton.setHeight(20);
                 joinButton.visible = false;
+                firstBtnVisible = btnVisible;
+            } else if ("COMPLETED".equals(status)) {
+                joinButton.visible = false;
+                registerButton.visible = false;
+                
+                context.drawTextWithShadow(this.textRenderer, Text.literal("EVENT COMPLETED"), rightX + 8, renderY + 26, 0xFFAAAAAA);
+                List<OrderedText> pmLines = this.textRenderer.wrapLines(Text.literal("This tournament has ended. You can no longer join the game server for this event."), rightWidth - 16);
+                int pmy = renderY + 38;
+                for (OrderedText line : pmLines) {
+                    context.drawTextWithShadow(this.textRenderer, line, rightX + 8, pmy, 0x888888);
+                    pmy += 10;
+                }
             } else {
                 joinButton.visible = false;
                 registerButton.visible = false;
@@ -654,6 +685,18 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
                     context.drawTextWithShadow(this.textRenderer, line, rightX + 8, pmy, 0x888888);
                     pmy += 10;
                 }
+            }
+
+            boolean hasStream = tournament.has("streamUrl") && !tournament.get("streamUrl").isJsonNull() && !tournament.get("streamUrl").getAsString().isEmpty();
+            if (hasStream) {
+                int watchY = firstBtnVisible ? btnY + 24 : btnY;
+                watchLiveButton.visible = btnVisible;
+                watchLiveButton.setX(rightX + 8);
+                watchLiveButton.setY(watchY);
+                watchLiveButton.setWidth(rightWidth - 16);
+                watchLiveButton.setHeight(20);
+            } else {
+                watchLiveButton.visible = false;
             }
         }
 
