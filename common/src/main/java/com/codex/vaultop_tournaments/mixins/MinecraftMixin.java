@@ -11,6 +11,7 @@ public class MinecraftMixin {
     @Inject(method = "runTick", at = @At("HEAD"))
     private void onTick(boolean bl, CallbackInfo ci) {
         MinecraftClient client = (MinecraftClient) (Object) this;
+        com.vaultop.mod.discord.DiscordPresenceManager.tick(client);
         if (client.world != null && client.player != null) {
             if (com.vaultop.mod.protectedmode.ProtectedModeManager.enforceResourcePacks) {
                 java.util.List<String> violatingPacks = com.vaultop.mod.protectedmode.ProtectedModeManager.getViolatingResourcePacks();
@@ -31,5 +32,10 @@ public class MinecraftMixin {
             // Automatically clear flag when not connected to a server/world
             com.vaultop.mod.protectedmode.ProtectedModeManager.enforceResourcePacks = false;
         }
+    }
+
+    @Inject(method = "close", at = @At("HEAD"))
+    private void onClose(CallbackInfo ci) {
+        com.vaultop.mod.discord.DiscordPresenceManager.shutdown();
     }
 }

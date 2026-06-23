@@ -28,6 +28,9 @@ public class VaultOPMod {
     public void onInitialize() {
         LOGGER.info("[VaultOP] Initializing VaultOP Mod client components...");
         
+        // Initialize Discord Rich Presence
+        com.vaultop.mod.discord.DiscordPresenceManager.init();
+
         // Initialize config manager first
         this.configManager = new com.vaultop.mod.auth.ConfigManager();
         this.configManager.loadConfig();

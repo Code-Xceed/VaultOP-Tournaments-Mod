@@ -151,10 +151,9 @@ public class ProtectedModeManager {
                             ResourcePackManager manager = MinecraftClient.getInstance().getResourcePackManager();
                             if (manager != null) {
                                 for (String id : manager.getEnabledIds()) {
-                                    ResourcePackProfile profile = manager.getProfile(id);
-                                    if (profile != null) {
-                                        ResourcePackSource source = profile.getSource();
-                                        if (source != ResourcePackSource.BUILTIN && source != ResourcePackSource.SERVER) {
+                                    if (id != null && id.startsWith("file/")) {
+                                        ResourcePackProfile profile = manager.getProfile(id);
+                                        if (profile != null) {
                                             violatingPacks.add(profile.getDisplayName().getString());
                                         }
                                     }
@@ -219,10 +218,9 @@ public class ProtectedModeManager {
                 ResourcePackManager manager = client.getResourcePackManager();
                 if (manager != null) {
                     for (String id : manager.getEnabledIds()) {
-                        ResourcePackProfile profile = manager.getProfile(id);
-                        if (profile != null) {
-                            ResourcePackSource source = profile.getSource();
-                            if (source != ResourcePackSource.BUILTIN && source != ResourcePackSource.SERVER) {
+                        if (id != null && id.startsWith("file/")) {
+                            ResourcePackProfile profile = manager.getProfile(id);
+                            if (profile != null) {
                                 violatingPacks.add(profile.getDisplayName().getString());
                             }
                         }
