@@ -126,10 +126,16 @@ public class ProtectedModeManager {
                             continue;
                         }
 
-                        // Always allow basic fabric libraries and common library dependencies unless strict mode requires otherwise
+                        // Always allow basic fabric libraries and common optimization/utility mods unless strict mode requires otherwise
                         if (mod.id.startsWith("fabric-") || mod.id.equals("fabric") || 
                             mod.id.equals("mixinextras") || mod.id.equals("architectury") || 
-                            mod.id.equals("fabric-language-kotlin") || mod.id.equals("kotlin")) {
+                            mod.id.equals("fabric-language-kotlin") || mod.id.equals("kotlin") ||
+                            mod.id.equals("sodium") || mod.id.equals("iris") || 
+                            mod.id.equals("indium") || mod.id.equals("lithium") || 
+                            mod.id.equals("modmenu") || mod.id.equals("yacl") || 
+                            mod.id.equals("yacl3") || mod.id.equals("zoomify") || 
+                            mod.id.equals("bobby") || mod.id.equals("replaymod") || 
+                            mod.id.equals("cloth-config") || mod.id.equals("cloth_config")) {
                             continue;
                         }
 
