@@ -8,7 +8,6 @@ repositories {
 
 dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${gradle.ext.fabric_api_version}"
-    implementation 'club.minnced:java-discord-rpc:2.0.2'
-    include 'club.minnced:java-discord-rpc:2.0.2'
-    include 'club.minnced:discord-rpc-release:v3.4.0'
+    implementation 'dev.firstdark.discordrpc:discord-rpc:1.0.4'
+    include 'dev.firstdark.discordrpc:discord-rpc:1.0.4'
 }

@@ -16,8 +16,10 @@ manifold {
 
 repositories {
     mavenCentral()
-    maven { url 'https://jitpack.io' }
-    maven { url 'https://maven.scijava.org/content/repositories/public/' }
+    maven {
+        name "FDD Maven"
+        url "https://maven.firstdark.dev/releases"
+    }
 }
 
 dependencies {

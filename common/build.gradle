@@ -7,5 +7,5 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'club.minnced:java-discord-rpc:2.0.2'
+    compileOnly 'dev.firstdark.discordrpc:discord-rpc:1.0.4'
 }

@@ -1,16 +1,15 @@
 package com.vaultop.mod.discord;
 
-import club.minnced.discord.rpc.DiscordEventHandlers;
-import club.minnced.discord.rpc.DiscordRPC;
-import club.minnced.discord.rpc.DiscordRichPresence;
+import dev.firstdark.discordrpc.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import com.vaultop.mod.gui.*;
+import com.vaultop.mod.VaultOPMod;
 
 public class DiscordPresenceManager {
     private static final String CLIENT_ID = "1517400659505319976";
+    private static DiscordRpc rpc;
     private static boolean initialized = false;
-    private static Thread callbackThread;
     private static long startTimestamp;
 
     private static String lastDetails = "";
@@ -19,71 +18,72 @@ public class DiscordPresenceManager {
     public static void init() {
         if (initialized) return;
         try {
-            DiscordRPC lib = DiscordRPC.INSTANCE;
-            DiscordEventHandlers handlers = new DiscordEventHandlers();
-            handlers.ready = (user) -> {
-                System.out.println("Discord RPC ready: " + user.username);
+            rpc = new DiscordRpc();
+            rpc.setDebugMode(false);
+
+            RPCEventHandler handler = new RPCEventHandler() {
+                @Override
+                public void ready(User user) {
+                    System.out.println("[VaultOP] Discord RPC ready: " + user.getUsername());
+                    updatePresence(lastDetails.isEmpty() ? "Main Menu" : lastDetails, lastState.isEmpty() ? "Playing VaultOP tournaments" : lastState);
+                }
+
+                @Override
+                public void disconnected(ErrorCode errorCode, String message) {
+                    System.out.println("[VaultOP] Discord RPC disconnected: " + message);
+                }
             };
-            
-            lib.Discord_Initialize(CLIENT_ID, handlers, true, null);
+
+            rpc.init(CLIENT_ID, handler, false);
             startTimestamp = System.currentTimeMillis() / 1000;
-            
-            DiscordRichPresence presence = new DiscordRichPresence();
-            presence.state = "Playing VaultOP tournaments";
-            presence.details = "Main Menu";
-            presence.largeImageKey = "logo";
-            presence.largeImageText = "VaultOP Tournaments";
-            presence.startTimestamp = startTimestamp;
-            
-            lib.Discord_UpdatePresence(presence);
             initialized = true;
 
-            // Start callback processing thread
-            callbackThread = new Thread(() -> {
-                while (!Thread.currentThread().isInterrupted() && initialized) {
-                    try {
-                        lib.Discord_RunCallbacks();
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        break;
-                    } catch (Exception e) {
-                        // Suppress background thread exceptions
-                    }
-                }
-            }, "DiscordRPC-Callbacks");
-            callbackThread.setDaemon(true);
-            callbackThread.start();
-            System.out.println("Discord Rich Presence initialized successfully.");
+            System.out.println("[VaultOP] Discord Rich Presence initialized successfully.");
         } catch (Throwable t) {
-            System.err.println("Failed to initialize Discord Rich Presence: " + t.getMessage());
+            System.err.println("[VaultOP] Failed to initialize Discord Rich Presence: " + t.getMessage());
             initialized = false;
         }
     }
 
     public static void updatePresence(String details, String state) {
-        if (!initialized) return;
+        if (!initialized || rpc == null) return;
         try {
-            DiscordRichPresence presence = new DiscordRichPresence();
-            presence.details = details;
-            presence.state = state;
-            presence.largeImageKey = "logo";
-            presence.largeImageText = "VaultOP Tournaments";
-            presence.startTimestamp = startTimestamp;
-            DiscordRPC.INSTANCE.Discord_UpdatePresence(presence);
+            String websiteUrl = "https://vault-op-tournaments.vercel.app";
+            try {
+                if (VaultOPMod.getInstance() != null && VaultOPMod.getInstance().getConfigManager() != null) {
+                    websiteUrl = VaultOPMod.getInstance().getConfigManager().getWebsiteUrl();
+                }
+            } catch (Throwable t) {
+                // Fallback
+            }
+
+            DiscordRichPresence presence = DiscordRichPresence.builder()
+                .details(details)
+                .state(state)
+                .largeImageKey("logo")
+                .largeImageText("VaultOP Tournaments")
+                .startTimestamp(startTimestamp)
+                .activityType(ActivityType.PLAYING)
+                .button(DiscordRichPresence.RPCButton.of("🌐 Website", websiteUrl))
+                .button(DiscordRichPresence.RPCButton.of("💬 Discord", "https://discord.gg/E3A7Fv5RBm"))
+                .build();
+
+            rpc.updatePresence(presence);
         } catch (Throwable t) {
-            // Suppress updates if failed
+            System.err.println("[VaultOP] Failed to update Discord Rich Presence: " + t.getMessage());
         }
     }
 
     public static void tick(MinecraftClient client) {
-        if (!initialized) return;
+        if (!initialized || rpc == null) return;
 
         String details = "Main Menu";
         String state = "Playing VaultOP tournaments";
 
         if (client.world != null && client.player != null) {
             if (client.getCurrentServerEntry() != null) {
-                details = "Playing on: " + client.getCurrentServerEntry().name;
+                details = "Competing in Tournaments";
+                state = "Playing on: " + client.getCurrentServerEntry().name;
             } else if (client.isIntegratedServerRunning()) {
                 details = "Playing SinglePlayer";
             } else {
@@ -121,16 +121,13 @@ public class DiscordPresenceManager {
     }
 
     public static void shutdown() {
-        if (!initialized) return;
+        if (!initialized || rpc == null) return;
         initialized = false;
-        if (callbackThread != null) {
-            callbackThread.interrupt();
-        }
         try {
-            DiscordRPC.INSTANCE.Discord_Shutdown();
-            System.out.println("Discord Rich Presence shut down.");
+            rpc.shutdown();
+            System.out.println("[VaultOP] Discord Rich Presence shut down.");
         } catch (Throwable t) {
-            // Suppress shutdown exception
+            // Ignore
         }
     }
 }
