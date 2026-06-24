@@ -146,6 +146,10 @@ public class ProfileScreen extends Screen {
     private int getLeftW() { return (int) (getPanelW() * 0.38); }
     private int getCenterW() { return (int) (getPanelW() * 0.26); }
     private int getRightW() { return getPanelW() - getLeftW() - getCenterW() - 32; }
+    private int getEventsHeaderHeight() { return 52; }
+    private int getEventCardHeight() { return 36; }
+    private int getEventCardSpacing() { return 8; }
+    private int getEventCardStep() { return getEventCardHeight() + getEventCardSpacing(); }
 
     @Override
     public void tick() {
@@ -194,16 +198,17 @@ public class ProfileScreen extends Screen {
             }
 
             // 2. Check if clicking on any of the registered tournaments cards
-            if (mouseX >= rightX + 12 && mouseX <= rightX + rightW - 8 && mouseY >= y + 22 && mouseY <= y + h - 8) {
-                int eventY = y + 26 - rightScrollOffset;
+            int listTop = y + getEventsHeaderHeight();
+            if (mouseX >= rightX + 12 && mouseX <= rightX + rightW - 8 && mouseY >= listTop && mouseY <= y + h - 8) {
+                int eventY = listTop + 4 - rightScrollOffset;
                 int cardW = rightW - 20;
                 for (JsonObject event : registeredEvents) {
-                    boolean isClicked = mouseX >= rightX + 12 && mouseX <= rightX + 12 + cardW && mouseY >= eventY && mouseY <= eventY + 44;
+                    boolean isClicked = mouseX >= rightX + 12 && mouseX <= rightX + 12 + cardW && mouseY >= eventY && mouseY <= eventY + getEventCardHeight();
                     if (isClicked) {
                         this.client.setScreen(new TournamentDetailScreen(this, event));
                         return true;
                     }
-                    eventY += 50;
+                    eventY += getEventCardStep();
                 }
             }
         }
@@ -245,9 +250,10 @@ public class ProfileScreen extends Screen {
         int y = panelY + 8;
         int h = panelH - 16;
 
-        if (mouseX >= rightX && mouseX <= rightX + rightW && mouseY >= y + 22 && mouseY <= y + h - 8) {
-            int scrollAreaH = h - 30;
-            int totalHeight = registeredEvents.size() * 50;
+        int listTop = y + getEventsHeaderHeight();
+        if (mouseX >= rightX && mouseX <= rightX + rightW && mouseY >= listTop && mouseY <= y + h - 8) {
+            int scrollAreaH = h - getEventsHeaderHeight() - 8;
+            int totalHeight = Math.max(0, registeredEvents.size() * getEventCardStep() - getEventCardSpacing());
             int maxScroll = Math.max(0, totalHeight - scrollAreaH);
             if (verticalAmount != 0) {
                 rightScrollOffset -= (int) Math.signum(verticalAmount) * 15;
@@ -268,16 +274,14 @@ public class ProfileScreen extends Screen {
         context.getMatrices().pop();
         context.draw();
         context.fill(RenderLayer.getGui(), 0, 0, this.width, this.height, -50, 0x80050505);
-    }
-
-    @Override
+    }    @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderBackground(context, mouseX, mouseY, delta);
 
         // Top Header
         TournamentListScreen.drawPremiumBeveledBox(context, 0, -2, this.width, 42, 0xD00A0F18, 0x25FFFFFF, 0x10FFFFFF);
-        context.drawTextWithShadow(this.textRenderer, Text.literal("VaultOP Esports"), 15, 16, 0xFFFFD700);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Player Profile"), this.width / 2, 16, 0xFFFFFF);
+        context.drawTextWithShadow(this.textRenderer, Text.literal("VaultOP Esports"), 82, 17, 0xFFFFD700);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Player Profile"), this.width / 2, 17, 0xFFFFFF);
 
         int panelX = getPanelX();
         int panelY = getPanelY();
@@ -318,14 +322,18 @@ public class ProfileScreen extends Screen {
             int leftH = h;
             int leftY = y;
 
-            // ── COLUMN 1: IDENTITY CARD (Height: 82) ──
+            // ── COLUMN 1: IDENTITY CARD ──
+            int identityCardH = 108;
             int cardColor = getRoleBadgeBorderColor(role);
-            TournamentListScreen.drawPremiumBeveledBox(context, leftX, leftY, leftW, 82, 0xD005080E, (cardColor & 0x00FFFFFF) | 0x40000000, (cardColor & 0x00FFFFFF) | 0x15000000);
-            context.drawText(this.textRenderer, Text.literal("§8§lVAULTOP COMPETITOR CARD"), leftX + 8, leftY + 6, 0x88FFFFFF, false);
+            TournamentListScreen.drawPremiumBeveledBox(context, leftX, leftY, leftW, identityCardH, 0xD005080E, (cardColor & 0x00FFFFFF) | 0x40000000, (cardColor & 0x00FFFFFF) | 0x15000000);
+            context.fill(leftX + 1, leftY + 1, leftX + leftW - 1, leftY + 23, 0x12000000);
+            context.drawText(this.textRenderer, Text.literal("§8§lVAULTOP COMPETITOR CARD"), leftX + 12, leftY + 8, 0x88FFFFFF, false);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("§8Linked tournament identity"), leftX + 12, leftY + 18, 0xFFFFFF);
+            context.fill(leftX + 10, leftY + 28, leftX + leftW - 10, leftY + 29, 0x18FFFFFF);
 
-            int avatarX = leftX + 8;
-            int avatarY = leftY + 16;
-            int avatarSize = 32;
+            int avatarX = leftX + 12;
+            int avatarY = leftY + 36;
+            int avatarSize = 40;
             TournamentListScreen.drawPremiumBeveledBox(context, avatarX - 1, avatarY - 1, avatarSize + 2, avatarSize + 2, 0xFF080808, 0x30FFFFFF, 0x15FFFFFF);
 
             Identifier avatarTex = null;
@@ -350,11 +358,11 @@ public class ProfileScreen extends Screen {
             context.fill(avatarX + avatarSize - 4, avatarY + avatarSize - 4, avatarX + avatarSize + 1, avatarY + avatarSize + 1, 0xFF000000);
             context.fill(avatarX + avatarSize - 3, avatarY + avatarSize - 3, avatarX + avatarSize, avatarY + avatarSize, 0xFF55FF55);
 
-            int infoX = avatarX + avatarSize + 8;
-            int infoY = avatarY - 2;
+            int infoX = avatarX + avatarSize + 12;
+            int infoY = avatarY + 1;
 
             String truncatedName = discordUser;
-            int maxNameWidth = leftW - (avatarSize + 20);
+            int maxNameWidth = leftW - (infoX - leftX) - 14;
             if (this.textRenderer.getWidth(discordUser) > maxNameWidth) {
                 truncatedName = this.textRenderer.trimToWidth(discordUser, maxNameWidth - 10) + "..";
             }
@@ -364,12 +372,13 @@ public class ProfileScreen extends Screen {
             if (!"Not Linked".equalsIgnoreCase(ign) && !ign.isEmpty()) {
                 ignDisplay += " §8(§b" + accountType.substring(0, Math.min(accountType.length(), 4)).toLowerCase() + "§8)";
             }
-            context.drawTextWithShadow(this.textRenderer, Text.literal(ignDisplay), infoX, infoY + 10, 0xFFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal(ignDisplay), infoX, infoY + 11, 0xFFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("§8Discord link verified"), infoX, infoY + 22, 0xFFFFFF);
 
             // Barcode
             int barcodeX = infoX;
-            int barcodeY = infoY + 20;
-            int barcodeH = 6;
+            int barcodeY = infoY + 34;
+            int barcodeH = 7;
             context.fill(barcodeX, barcodeY, barcodeX + 2, barcodeY + barcodeH, 0x88FFFFFF);
             context.fill(barcodeX + 3, barcodeY, barcodeX + 4, barcodeY + barcodeH, 0x88FFFFFF);
             context.fill(barcodeX + 6, barcodeY, barcodeX + 8, barcodeY + barcodeH, 0x88FFFFFF);
@@ -385,28 +394,33 @@ public class ProfileScreen extends Screen {
             int badgeBg = getRoleBadgeColor(role);
             int badgeBorder = getRoleBadgeBorderColor(role);
             String badgeText = getRoleBadgeText(role);
-            TournamentListScreen.drawPremiumBeveledBox(context, leftX + 8, leftY + 62, leftW - 16, 13, badgeBg, badgeBorder, badgeBorder);
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(badgeText), leftX + leftW / 2, leftY + 62 + 2, 0xFFFFFF);
+            TournamentListScreen.drawPremiumBeveledBox(context, leftX + 12, leftY + identityCardH - 24, leftW - 24, 16, badgeBg, badgeBorder, badgeBorder);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(badgeText), leftX + leftW / 2, leftY + identityCardH - 19, 0xFFFFFF);
 
             // ── COLUMN 1: COMPETITOR DOSSIER (Statistics / Info) ──
-            int dossierY = leftY + 82 + 6;
-            int dossierH = leftH - 82 - 6;
+            int dossierY = leftY + identityCardH + 10;
+            int dossierH = leftH - identityCardH - 10;
             TournamentListScreen.drawPremiumBeveledBox(context, leftX, dossierY, leftW, dossierH, 0x8005080E, 0x20FFFFFF, 0x10FFFFFF);
+            context.fill(leftX + 1, dossierY + 1, leftX + leftW - 1, dossierY + 27, 0x12000000);
 
-            int dossierContentX = leftX + 10;
-            int dossierContentY = dossierY + 8;
+            int dossierContentX = leftX + 12;
+            int dossierContentY = dossierY + 10;
             context.drawTextWithShadow(this.textRenderer, Text.literal("§6§lCOMPETITOR DOSSIER"), dossierContentX, dossierContentY, 0xFFFFFF);
-            context.fill(leftX + 8, dossierContentY + 10, leftX + leftW - 8, dossierContentY + 11, 0x18FFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("§8Operational profile and security state"), dossierContentX, dossierContentY + 10, 0xFFFFFF);
+            context.fill(leftX + 10, dossierY + 28, leftX + leftW - 10, dossierY + 29, 0x18FFFFFF);
 
-            int statY = dossierContentY + 14;
-            int lineSpacing = Math.min(12, (dossierH - 24) / 5);
+            String displayDiscordId = discordId.length() > 14 ? discordId.substring(0, 12) + "..." : discordId;
+            int rowX = leftX + 10;
+            int rowW = leftW - 20;
+            int rowY = dossierY + 38;
+            int rowH = 18;
+            int rowGap = 7;
 
-            String displayDiscordId = discordId.length() > 12 ? discordId.substring(0, 10) + "..." : discordId;
-            context.drawTextWithShadow(this.textRenderer, Text.literal("§7Discord ID: §f" + displayDiscordId), dossierContentX, statY, 0xFFFFFF);
-            context.drawTextWithShadow(this.textRenderer, Text.literal("§7Client Type: §b" + accountType), dossierContentX, statY + lineSpacing, 0xFFFFFF);
-            context.drawTextWithShadow(this.textRenderer, Text.literal("§7Registrations: §e" + registeredEvents.size()), dossierContentX, statY + lineSpacing * 2, 0xFFFFFF);
-            context.drawTextWithShadow(this.textRenderer, Text.literal("§7Security Check: §aPASS"), dossierContentX, statY + lineSpacing * 3, 0xFFFFFF);
-            context.drawTextWithShadow(this.textRenderer, Text.literal("§7System Integrity: §aSECURE"), dossierContentX, statY + lineSpacing * 4, 0xFFFFFF);
+            drawProfileStatRow(context, rowX, rowY, rowW, "Discord ID", displayDiscordId, 0xFFFFFFFF, 0xFF6EA8FF);
+            drawProfileStatRow(context, rowX, rowY + (rowH + rowGap), rowW, "Client Type", accountType.toUpperCase(), 0xFF55FFFF, 0xFF55D6FF);
+            drawProfileStatRow(context, rowX, rowY + (rowH + rowGap) * 2, rowW, "Registrations", String.valueOf(registeredEvents.size()), 0xFFFFD54F, 0xFFFFD54F);
+            drawProfileStatRow(context, rowX, rowY + (rowH + rowGap) * 3, rowW, "Security Check", "PASS", 0xFF55FF55, 0xFF55FF55);
+            drawProfileStatRow(context, rowX, rowY + (rowH + rowGap) * 4, rowW, "System Integrity", "SECURE", 0xFF55FFAA, 0xFF55FFAA);
 
             // ── COLUMN 2: 3D SKIN VIEWER & PEDESTAL ──
             int centerH = h;
@@ -416,16 +430,16 @@ public class ProfileScreen extends Screen {
             drawBlendedGradient(context, centerX + 2, centerY + 2, centerW - 4, centerH - 4);
 
             int charCX = centerX + centerW / 2;
-            int charBaseY = centerY + centerH - 25;
-            float scale = (centerH - 30) / 2.0f;
+            int charBaseY = centerY + centerH - 38;
+            float scale = 42.0f;
 
             // Draw sci-fi energy pedestal ovals
-            drawEllipse(context, charCX, charBaseY, 24, 5, 0x302196F3);
-            drawEllipse(context, charCX, charBaseY, 18, 4, 0x602196F3);
-            drawEllipse(context, charCX, charBaseY, 12, 2.5f, 0xFF55FFFF);
+            drawEllipse(context, charCX, charBaseY + 1, 28, 6, 0x302196F3);
+            drawEllipse(context, charCX, charBaseY + 1, 21, 4.5f, 0x602196F3);
+            drawEllipse(context, charCX, charBaseY + 1, 14, 3.0f, 0xFF55FFFF);
 
             // Draw soft rising light energy tube
-            context.fill(charCX - 18, centerY + 20, charCX + 18, charBaseY, 0x0A2196F3);
+            context.fill(charCX - 22, centerY + 18, charCX + 22, charBaseY + 1, 0x0D2196F3);
 
             // Draw floating holographic particles
             float tickTime = (System.currentTimeMillis() / 150.0f);
@@ -440,7 +454,7 @@ public class ProfileScreen extends Screen {
             String nameTagText = discordUser;
             int tagWidth = this.textRenderer.getWidth(nameTagText);
             int tagX = charCX - tagWidth / 2;
-            int tagY = charBaseY - (int)(scale * 2.0f) - 16;
+            int tagY = charBaseY - (int)(scale * 2.35f) - 6;
             context.fill(tagX - 4, tagY - 2, tagX + tagWidth + 4, tagY + 10, 0xAA000000);
             context.fill(tagX - 5, tagY - 3, tagX + tagWidth + 5, tagY - 2, 0x33FFFFFF);
             context.fill(tagX - 5, tagY + 10, tagX + tagWidth + 5, tagY + 11, 0x33FFFFFF);
@@ -463,7 +477,7 @@ public class ProfileScreen extends Screen {
                 boolean rendered = false;
                 if (client.player != null) {
                     try {
-                        int size = (int) (scale * 0.95f);
+                        int size = (int) (scale * 1.05f);
                         // Temporarily rotate the client player entity for rendering
                         float oldYaw = client.player.getYaw();
                         float oldPitch = client.player.getPitch();
@@ -477,12 +491,12 @@ public class ProfileScreen extends Screen {
 
                         net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity(
                             context,
-                            charCX - 40, charBaseY - (int)(size * 1.8f),
-                            charCX + 40, charBaseY,
+                            charCX - 34, charBaseY - (int)(size * 2.35f),
+                            charCX + 34, charBaseY + 2,
                             size,
                             0.0625f,
                             charCX,
-                            charBaseY - size, // Looking straight
+                            charBaseY - (int)(size * 1.15f),
                             client.player
                         );
 
@@ -500,7 +514,7 @@ public class ProfileScreen extends Screen {
 
                 if (!rendered) {
                     // Try actual 3D model rendering (works without joining a world)
-                    if (!render3DPlayerModel(context, skinTex, entityRotation, charCX, charBaseY - (int)(0.5f * scale), centerH)) {
+                    if (!render3DPlayerModel(context, skinTex, entityRotation, charCX, charBaseY - (int)(0.78f * scale), scale * 1.08f)) {
                         // Fallback to 2D rendering
                         float skinScale = 1.4f;
                         int headSz = (int) (16 * skinScale);
@@ -520,80 +534,93 @@ public class ProfileScreen extends Screen {
             // ── COLUMN 3: REGISTERED EVENTS LIST ──
             int rightH = h;
             int rightY = y;
+            int eventsHeaderH = getEventsHeaderHeight();
+            int listTop = rightY + eventsHeaderH;
+            int approvedCount = 0;
+            int pendingCount = 0;
+            int attentionCount = 0;
+
+            for (JsonObject event : registeredEvents) {
+                String statusKey = getCompactRegistrationStatus(event.has("userStatusLabel") ? event.get("userStatusLabel").getAsString() : "");
+                if ("APPROVED".equals(statusKey) || "REGISTERED".equals(statusKey)) {
+                    approvedCount++;
+                } else if ("PENDING".equals(statusKey)) {
+                    pendingCount++;
+                } else if ("REJECTED".equals(statusKey)) {
+                    attentionCount++;
+                }
+            }
 
             TournamentListScreen.drawPremiumBeveledBox(context, rightX, rightY, rightW, rightH, 0x8005080E, 0x2055FF55, 0x1055FF55);
             context.drawTextWithShadow(this.textRenderer, Text.literal("§a⚔ Registered Events §7(" + registeredEvents.size() + ")"), rightX + 12, rightY + 8, 0xFFFFFF);
-            context.fill(rightX + 10, rightY + 20, rightX + rightW - 10, rightY + 21, 0x18FFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("§8Tournament queue and approval status"), rightX + 12, rightY + 19, 0xFFFFFF);
+            context.fill(rightX + 10, rightY + 28, rightX + rightW - 10, rightY + 29, 0x18FFFFFF);
 
-            int scrollAreaH = rightH - 28;
+            TournamentListScreen.drawPremiumBeveledBox(context, rightX + 12, rightY + 34, rightW - 24, 14, 0x30000000, 0x18FFFFFF, 0x08000000);
+            context.drawTextWithShadow(
+                    this.textRenderer,
+                    Text.literal("§aApproved: §f" + approvedCount + "   §ePending: §f" + pendingCount + "   §cAttention: §f" + attentionCount),
+                    rightX + 18,
+                    rightY + 38,
+                    0xFFFFFF
+            );
+
+            int scrollAreaH = rightH - eventsHeaderH - 8;
             if (!eventsLoadingStatus.isEmpty()) {
-                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§7" + eventsLoadingStatus), rightX + rightW / 2, rightY + 22 + scrollAreaH / 2 - 4, 0xFFFFFF);
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§7" + eventsLoadingStatus), rightX + rightW / 2, listTop + scrollAreaH / 2 - 4, 0xFFFFFF);
             } else {
-                context.enableScissor(rightX + 4, rightY + 22, rightX + rightW - 4, rightY + rightH - 8);
+                context.enableScissor(rightX + 4, listTop, rightX + rightW - 4, rightY + rightH - 8);
 
-                int eventY = rightY + 26 - rightScrollOffset;
+                int eventY = listTop + 4 - rightScrollOffset;
                 int cardW = rightW - 20;
 
                 for (JsonObject event : registeredEvents) {
                     String name = event.has("name") ? event.get("name").getAsString() : "Unnamed Event";
                     String statusLabel = event.has("userStatusLabel") ? event.get("userStatusLabel").getAsString() : "PENDING";
                     String gameVersion = event.has("gameVersion") ? event.get("gameVersion").getAsString() : "1.21.5";
-
-                    int statusBadgeBg = 0x40808080;
-                    String formattedBadge = "§7" + statusLabel.toUpperCase();
-                    int borderGlow = 0x15FFFFFF;
-
-                    if (statusLabel.toLowerCase().contains("approved") || statusLabel.toLowerCase().contains("registered")) {
-                        statusBadgeBg = 0x3355FF55;
-                        formattedBadge = "§a" + statusLabel.toUpperCase();
-                        borderGlow = 0x2055FF55;
-                    } else if (statusLabel.toLowerCase().contains("pending")) {
-                        statusBadgeBg = 0x33FFFF55;
-                        formattedBadge = "§e" + statusLabel.toUpperCase();
-                        borderGlow = 0x20FFFF55;
-                    } else if (statusLabel.toLowerCase().contains("rejected")) {
-                        statusBadgeBg = 0x33FF5555;
-                        formattedBadge = "§c" + statusLabel.toUpperCase();
-                        borderGlow = 0x20FF5555;
-                    }
-
-                    boolean isHovered = mouseX >= rightX + 12 && mouseX <= rightX + 12 + cardW && mouseY >= eventY && mouseY <= eventY + 44;
-                    if (eventY + 44 >= rightY + 22 && eventY <= rightY + rightH - 8) {
+                    String statusKey = getCompactRegistrationStatus(statusLabel);
+                    int accentColor = getRegistrationStatusAccent(statusKey);
+                    int eventBadgeBg = withAlpha(accentColor, 64);
+                    int borderGlow = withAlpha(accentColor, 34);
+                    String eventBadgeText = getRegistrationStatusLabel(statusKey);
+                    boolean isHovered = mouseX >= rightX + 12 && mouseX <= rightX + 12 + cardW && mouseY >= eventY && mouseY <= eventY + getEventCardHeight();
+                    if (eventY + getEventCardHeight() >= listTop && eventY <= rightY + rightH - 8) {
                         int cardX = rightX + 12;
                         int currentCardW = cardW;
                         if (isHovered) {
                             cardX += 2;
                             currentCardW -= 2;
-                            borderGlow = (borderGlow & 0x00FFFFFF) | 0x80000000;
+                            borderGlow = withAlpha(accentColor, 90);
                         }
 
-                        TournamentListScreen.drawPremiumBeveledBox(context, cardX, eventY, currentCardW, 44, 0x40000000, borderGlow, borderGlow / 2);
+                        TournamentListScreen.drawPremiumBeveledBox(context, cardX, eventY, currentCardW, getEventCardHeight(), 0x46000000, borderGlow, withAlpha(accentColor, 18));
+                        context.fill(cardX, eventY, cardX + 3, eventY + getEventCardHeight(), accentColor);
 
                         String displayName = name;
-                        int maxNameW = currentCardW - 60;
+                        int maxNameW = currentCardW - 94;
                         if (this.textRenderer.getWidth(name) > maxNameW) {
                             displayName = this.textRenderer.trimToWidth(name, maxNameW - 8) + "..";
                         }
-                        context.drawTextWithShadow(this.textRenderer, Text.literal("§f" + displayName), cardX + 8, eventY + 8, 0xFFFFFF);
-                        context.drawTextWithShadow(this.textRenderer, Text.literal("§bv" + gameVersion), cardX + 8, eventY + 22, 0xFFFFFF);
+                        context.drawTextWithShadow(this.textRenderer, Text.literal("§f" + displayName), cardX + 10, eventY + 7, 0xFFFFFF);
+                        context.drawTextWithShadow(this.textRenderer, Text.literal("§bv" + gameVersion), cardX + 10, eventY + 20, 0xFFFFFF);
 
-                        int labelW = this.textRenderer.getWidth(formattedBadge) + 8;
+                        int labelW = this.textRenderer.getWidth(eventBadgeText) + 10;
                         int labelH = 12;
                         int labelX = cardX + currentCardW - labelW - 8;
-                        int labelYInside = eventY + 16;
-                        TournamentListScreen.drawPremiumBeveledBox(context, labelX, labelYInside, labelW, labelH, statusBadgeBg, statusBadgeBg * 2, statusBadgeBg * 2);
-                        context.drawTextWithShadow(this.textRenderer, Text.literal(formattedBadge), labelX + 4, labelYInside + 2, 0xFFFFFF);
+                        int labelYInside = eventY + 12;
+                        TournamentListScreen.drawPremiumBeveledBox(context, labelX, labelYInside, labelW, labelH, eventBadgeBg, withAlpha(accentColor, 110), withAlpha(accentColor, 50));
+                        context.drawTextWithShadow(this.textRenderer, Text.literal(eventBadgeText), labelX + 5, labelYInside + 2, 0xFFFFFF);
                     }
-                    eventY += 50;
+                    eventY += getEventCardStep();
                 }
 
                 context.disableScissor();
 
-                int totalHeight = registeredEvents.size() * 50;
+                int totalHeight = Math.max(0, registeredEvents.size() * getEventCardStep() - getEventCardSpacing());
                 int maxScroll = Math.max(0, totalHeight - scrollAreaH);
                 if (maxScroll > 0) {
                     int scrollbarX = rightX + rightW - 6;
-                    int scrollbarY = rightY + 22;
+                    int scrollbarY = listTop;
                     context.fill(scrollbarX, scrollbarY, scrollbarX + 2, scrollbarY + scrollAreaH, 0x22FFFFFF);
                     int thumbHeight = (scrollAreaH * scrollAreaH) / (scrollAreaH + maxScroll);
                     if (thumbHeight < 10) thumbHeight = 10;
@@ -620,7 +647,7 @@ public class ProfileScreen extends Screen {
      * Returns true if rendering succeeded, false to indicate fallback needed.
      */
     @SuppressWarnings("unchecked")
-    private boolean render3DPlayerModel(DrawContext context, Identifier skinTexture, float rotation, int centerX, int centerY, int panelHeight) {
+    private boolean render3DPlayerModel(DrawContext context, Identifier skinTexture, float rotation, int centerX, int centerY, float scale) {
         ensureModelInit();
         if (playerModel == null) return false;
 
@@ -631,13 +658,10 @@ public class ProfileScreen extends Screen {
             // Flush any pending GUI draw calls so they render behind the model
             context.draw();
 
-            // Calculate scale to fit panel height (player is ~2.0 blocks tall in model space)
-            float scale = (panelHeight - 30) / 2.0f;
-
             context.getMatrices().push();
 
-            // Position model at screen coordinates (pivot offset to middle of torso at y=0.5 blocks)
-            context.getMatrices().translate(centerX, centerY - 0.5f * scale, 50.0f);
+            // Position the model slightly higher so the profile column feels centered.
+            context.getMatrices().translate(centerX, centerY - 0.72f * scale, 50.0f);
 
             // Scale: positive Y goes down in screen space, and model coordinates have positive Y going down
             context.getMatrices().scale(scale, scale, scale);
@@ -706,6 +730,63 @@ public class ProfileScreen extends Screen {
         part.pitch = 0;
         part.yaw = 0;
         part.roll = 0;
+    }
+
+    private String getCompactRegistrationStatus(String statusLabel) {
+        if (statusLabel == null) return "REGISTERED";
+
+        String lower = statusLabel.toLowerCase();
+        if (lower.contains("approved")) return "APPROVED";
+        if (lower.contains("pending")) return "PENDING";
+        if (lower.contains("rejected")) return "REJECTED";
+        if (lower.contains("registered")) return "REGISTERED";
+        return "REGISTERED";
+    }
+
+    private String getRegistrationStatusLabel(String statusKey) {
+        return switch (statusKey) {
+            case "APPROVED" -> "§aAPPROVED";
+            case "PENDING" -> "§ePENDING";
+            case "REJECTED" -> "§cREVIEW";
+            default -> "§bREGISTERED";
+        };
+    }
+
+    private String getRegistrationStatusDetail(String statusKey) {
+        return switch (statusKey) {
+            case "APPROVED" -> "ready to play";
+            case "PENDING" -> "awaiting review";
+            case "REJECTED" -> "needs attention";
+            default -> "registration synced";
+        };
+    }
+
+    private int getRegistrationStatusAccent(String statusKey) {
+        return switch (statusKey) {
+            case "APPROVED" -> 0xFF55FF55;
+            case "PENDING" -> 0xFFFFDD55;
+            case "REJECTED" -> 0xFFFF6666;
+            default -> 0xFF55D6FF;
+        };
+    }
+
+    private int withAlpha(int color, int alpha) {
+        return (Math.max(0, Math.min(255, alpha)) << 24) | (color & 0x00FFFFFF);
+    }
+
+    private void drawProfileStatRow(DrawContext context, int x, int y, int w, String label, String value, int valueColor, int accentColor) {
+        TournamentListScreen.drawPremiumBeveledBox(context, x, y, w, 18, 0x26000000, withAlpha(accentColor, 36), withAlpha(accentColor, 18));
+        context.fill(x, y, x + 3, y + 18, accentColor);
+        context.drawTextWithShadow(this.textRenderer, Text.literal("§7" + label), x + 9, y + 5, 0xFFFFFF);
+
+        String displayValue = value == null ? "-" : value;
+        int maxValueWidth = Math.max(40, w - 120);
+        if (this.textRenderer.getWidth(displayValue) > maxValueWidth) {
+            displayValue = this.textRenderer.trimToWidth(displayValue, maxValueWidth - 6) + "..";
+        }
+
+        int valueX = x + w - 8 - this.textRenderer.getWidth(displayValue);
+        context.drawTextWithShadow(this.textRenderer, Text.literal(displayValue), valueX, y + 5, valueColor);
     }
 
     private String getRoleBadgeText(String role) {
