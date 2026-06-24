@@ -36,6 +36,11 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
         // 1. Back button pushed to the extreme top-left corner
         this.addDrawableChild(new PremiumButtonWidget(10, 10, 40, 18, Text.literal("Back"), button -> close(), 0xFF8B2B2B, 0xFF4A1010, 0xFFE57373));
 
+        // Refresh button
+        this.addDrawableChild(new PremiumButtonWidget(54, 10, 20, 18, Text.literal("↻"), button -> {
+            VaultOPMod.getInstance().forceRefreshData();
+        }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
+
         // 2. Navigation buttons stacked in the extreme bottom-left corner
         int btnW = 90;
         int btnH = 18;
@@ -312,7 +317,18 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
     public void onWebSocketMessage(JsonObject json) {
         if (json.has("type") && !json.get("type").isJsonNull()) {
             String type = json.get("type").getAsString();
-            if ("ANNOUNCEMENT".equals(type)) {
+            if ("ANNOUNCEMENTS_SYNC".equals(type)) {
+                if (json.has("announcements") && json.get("announcements").isJsonArray()) {
+                    com.google.gson.JsonArray array = json.getAsJsonArray("announcements");
+                    this.client.execute(() -> {
+                        this.announcements.clear();
+                        for (int i = 0; i < array.size(); i++) {
+                            this.announcements.add(array.get(i).getAsJsonObject());
+                        }
+                        this.loadingStatus = this.announcements.isEmpty() ? "No active announcements." : "";
+                    });
+                }
+            } else if ("ANNOUNCEMENT".equals(type)) {
                 this.client.execute(this::fetchAnnouncements);
             }
         }

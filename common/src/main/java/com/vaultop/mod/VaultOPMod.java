@@ -100,6 +100,35 @@ public class VaultOPMod {
         }
     }
 
+    public void forceRefreshData() {
+        LOGGER.info("[VaultOP] Force refreshing data...");
+        if (this.restClient != null) {
+            this.restClient.fetchTournaments()
+                .thenAccept(array -> {
+                    com.google.gson.JsonObject json = new com.google.gson.JsonObject();
+                    json.addProperty("type", "TOURNAMENTS_SYNC");
+                    json.add("tournaments", array);
+                    this.handleWebSocketMessage(json);
+                })
+                .exceptionally(ex -> {
+                    LOGGER.error("Failed to force refresh tournaments", ex);
+                    return null;
+                });
+
+            this.restClient.fetchAnnouncements()
+                .thenAccept(array -> {
+                    com.google.gson.JsonObject json = new com.google.gson.JsonObject();
+                    json.addProperty("type", "ANNOUNCEMENTS_SYNC");
+                    json.add("announcements", array);
+                    this.handleWebSocketMessage(json);
+                })
+                .exceptionally(ex -> {
+                    LOGGER.error("Failed to force refresh announcements", ex);
+                    return null;
+                });
+        }
+    }
+
     public static VaultOPMod getInstance() {
         return instance;
     }

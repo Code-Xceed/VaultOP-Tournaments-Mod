@@ -178,6 +178,11 @@ public class TournamentListScreen extends Screen implements WebSocketMessageList
         // Back button centered at the bottom of the screen
         this.addDrawableChild(new PremiumButtonWidget(this.width / 2 - 40, this.height - 25, 80, 20, Text.literal("Back"), button -> close(), 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
 
+        // Refresh button next to Search field
+        this.addDrawableChild(new PremiumButtonWidget(this.width / 2 + 82, 10, 20, 20, Text.literal("↻"), button -> {
+            VaultOPMod.getInstance().forceRefreshData();
+        }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
+
         // Horizontal filter buttons in right top corner
         int btnStartX = this.width - 235;
         this.addDrawableChild(new PremiumButtonWidget(btnStartX, 10, 70, 20, Text.literal("All"), button -> setFilter("ALL"), 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3)
@@ -431,7 +436,19 @@ public class TournamentListScreen extends Screen implements WebSocketMessageList
     public void onWebSocketMessage(JsonObject json) {
         if (json.has("type") && !json.get("type").isJsonNull()) {
             String type = json.get("type").getAsString();
-            if ("TOURNAMENT_UPDATED".equals(type) || "MAINTENANCE_UPDATE".equals(type)) {
+            if ("TOURNAMENTS_SYNC".equals(type)) {
+                if (json.has("tournaments") && json.get("tournaments").isJsonArray()) {
+                    com.google.gson.JsonArray array = json.getAsJsonArray("tournaments");
+                    this.client.execute(() -> {
+                        allTournaments.clear();
+                        for (int i = 0; i < array.size(); i++) {
+                            allTournaments.add(array.get(i).getAsJsonObject());
+                        }
+                        statusText = allTournaments.isEmpty() ? "No tournaments available." : "";
+                        filterTournaments();
+                    });
+                }
+            } else if ("TOURNAMENT_UPDATED".equals(type) || "MAINTENANCE_UPDATE".equals(type)) {
                 this.client.execute(this::refreshList);
             }
         }

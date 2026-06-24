@@ -143,6 +143,11 @@ public class ProfileScreen extends Screen {
         this.clearChildren();
 
         this.addDrawableChild(new PremiumButtonWidget(this.width / 2 - 40, this.height - 24, 80, 18, Text.literal("Back"), button -> close(), 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
+        this.addDrawableChild(new PremiumButtonWidget(this.width / 2 + 45, this.height - 24, 20, 18, Text.literal("↻"), button -> {
+            VaultOPMod.getInstance().forceRefreshData();
+            refreshProfile();
+            fetchRegisteredEvents();
+        }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
 
         if (profileData != null) {
             int panelX = 15;

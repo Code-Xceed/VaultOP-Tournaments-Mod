@@ -199,6 +199,12 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
         // Back Button in top left (above header banner)
         this.addDrawableChild(new PremiumButtonWidget(10, 10, 50, 20, Text.literal("Back"), button -> close(), 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
 
+        // Refresh Button
+        this.addDrawableChild(new PremiumButtonWidget(65, 10, 20, 20, Text.literal("↻"), button -> {
+            VaultOPMod.getInstance().forceRefreshData();
+            fetchFreshStatus();
+        }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
+
         // Tab selection buttons
         this.addDrawableChild(new PremiumButtonWidget(20, 115, 100, 20, Text.literal("Overview"), button -> selectTab("OVERVIEW"), 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3)
                 .setSelectedSupplier(() -> "OVERVIEW".equals(activeTab)));
@@ -753,6 +759,34 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
                             this.joinButton.active = true;
                         }
                     });
+                }
+            }
+            if ("TOURNAMENTS_SYNC".equals(type)) {
+                if (json.has("tournaments") && json.get("tournaments").isJsonArray()) {
+                    com.google.gson.JsonArray array = json.getAsJsonArray("tournaments");
+                    for (int i = 0; i < array.size(); i++) {
+                        JsonObject t = array.get(i).getAsJsonObject();
+                        if (t.has("id") && tournamentId.equals(t.get("id").getAsString())) {
+                            this.client.execute(() -> {
+                                if (t.has("status") && !t.get("status").isJsonNull()) {
+                                    this.tournament.addProperty("status", t.get("status").getAsString());
+                                }
+                                if (t.has("userStatusLabel") && !t.get("userStatusLabel").isJsonNull()) {
+                                    this.tournament.addProperty("userStatusLabel", t.get("userStatusLabel").getAsString());
+                                    this.userStatus = TournamentListScreen.getStatusFromLabel(t.get("userStatusLabel").getAsString());
+                                }
+                                if (t.has("broadcast") && !t.get("broadcast").isJsonNull()) {
+                                    this.broadcastMessage = t.get("broadcast").getAsString();
+                                }
+                                if (t.has("serverIp") && !t.get("serverIp").isJsonNull()) {
+                                    this.serverIp = t.get("serverIp").getAsString();
+                                }
+                                calculateCountdown();
+                            });
+                            this.client.execute(this::fetchFreshStatus);
+                            break;
+                        }
+                    }
                 }
             }
             if ("TOURNAMENT_UPDATED".equals(type) && json.has("tournamentId") && !json.get("tournamentId").isJsonNull()) {
