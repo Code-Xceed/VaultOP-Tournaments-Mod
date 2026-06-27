@@ -327,8 +327,8 @@ public class ProfileScreen extends Screen {
             int cardColor = getRoleBadgeBorderColor(role);
             TournamentListScreen.drawPremiumBeveledBox(context, leftX, leftY, leftW, identityCardH, 0xD005080E, (cardColor & 0x00FFFFFF) | 0x40000000, (cardColor & 0x00FFFFFF) | 0x15000000);
             context.fill(leftX + 1, leftY + 1, leftX + leftW - 1, leftY + 23, 0x12000000);
-            context.drawText(this.textRenderer, Text.literal("§8§lVAULTOP COMPETITOR CARD"), leftX + 12, leftY + 8, 0x88FFFFFF, false);
-            context.drawTextWithShadow(this.textRenderer, Text.literal("§8Linked tournament identity"), leftX + 12, leftY + 18, 0xFFFFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("§b§lVAULTOP COMPETITOR CARD"), leftX + 12, leftY + 8, 0xFFFFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("§7Linked tournament identity"), leftX + 12, leftY + 18, 0xFFFFFFFF);
             context.fill(leftX + 10, leftY + 28, leftX + leftW - 10, leftY + 29, 0x18FFFFFF);
 
             int avatarX = leftX + 12;
@@ -406,15 +406,15 @@ public class ProfileScreen extends Screen {
             int dossierContentX = leftX + 12;
             int dossierContentY = dossierY + 10;
             context.drawTextWithShadow(this.textRenderer, Text.literal("§6§lCOMPETITOR DOSSIER"), dossierContentX, dossierContentY, 0xFFFFFFFF);
-            context.drawTextWithShadow(this.textRenderer, Text.literal("§8Operational profile and security state"), dossierContentX, dossierContentY + 10, 0xFFFFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("§7Operational profile and security state"), dossierContentX, dossierContentY + 10, 0xFFFFFFFF);
             context.fill(leftX + 10, dossierY + 28, leftX + leftW - 10, dossierY + 29, 0x18FFFFFF);
 
-            String displayDiscordId = discordId.length() > 14 ? discordId.substring(0, 12) + "..." : discordId;
+            String displayDiscordId = discordId.length() > 18 ? discordId.substring(0, 16) + "..." : discordId;
             int rowX = leftX + 10;
             int rowW = leftW - 20;
-            int rowY = dossierY + 38;
-            int rowH = 18;
-            int rowGap = 7;
+            int rowY = dossierY + 34;
+            int rowH = 16;
+            int rowGap = 3;
 
             drawProfileStatRow(context, rowX, rowY, rowW, "Discord ID", displayDiscordId, 0xFFFFFFFF, 0xFF6EA8FF);
             drawProfileStatRow(context, rowX, rowY + (rowH + rowGap), rowW, "Client Type", accountType.toUpperCase(), 0xFF55FFFF, 0xFF55D6FF);
@@ -771,18 +771,21 @@ public class ProfileScreen extends Screen {
     }
 
     private void drawProfileStatRow(DrawContext context, int x, int y, int w, String label, String value, int valueColor, int accentColor) {
-        TournamentListScreen.drawPremiumBeveledBox(context, x, y, w, 18, 0x26000000, withAlpha(accentColor, 36), withAlpha(accentColor, 18));
-        context.fill(x, y, x + 3, y + 18, accentColor);
-        context.drawTextWithShadow(this.textRenderer, Text.literal("§7" + label), x + 9, y + 5, 0xFFFFFFFF);
+        // Flat, modern style with a colorful accent bar on the left but NO heavy outer borders!
+        context.fill(x, y, x + 2, y + 15, accentColor);
+        context.drawTextWithShadow(this.textRenderer, Text.literal("§7" + label), x + 8, y + 3, 0xFFFFFFFF);
 
         String displayValue = value == null ? "-" : value;
-        int maxValueWidth = Math.max(40, w - 120);
+        int maxValueWidth = w - 80;
         if (this.textRenderer.getWidth(displayValue) > maxValueWidth) {
             displayValue = this.textRenderer.trimToWidth(displayValue, maxValueWidth - 6) + "..";
         }
 
-        int valueX = x + w - 8 - this.textRenderer.getWidth(displayValue);
-        context.drawTextWithShadow(this.textRenderer, Text.literal(displayValue), valueX, y + 5, valueColor);
+        int valueX = x + w - 4 - this.textRenderer.getWidth(displayValue);
+        context.drawTextWithShadow(this.textRenderer, Text.literal(displayValue), valueX, y + 3, valueColor);
+        
+        // Subtle divider line at the bottom of the row
+        context.fill(x, y + 15, x + w, y + 16, 0x10FFFFFF);
     }
 
     private String getRoleBadgeText(String role) {

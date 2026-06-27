@@ -180,6 +180,10 @@ public class TournamentListScreen extends Screen implements WebSocketMessageList
 
         // Refresh button next to Search field
         this.addDrawableChild(new PremiumButtonWidget(this.width / 2 + 82, 10, 20, 20, Text.literal("↻"), button -> {
+            statusText = "Loading tournaments...";
+            this.allTournaments.clear();
+            this.filteredTournaments.clear();
+            refreshList();
             VaultOPMod.getInstance().forceRefreshData();
         }, 0xFF3C464F, 0xFF0C0C0C, 0xFF2196F3));
 
@@ -304,7 +308,7 @@ public class TournamentListScreen extends Screen implements WebSocketMessageList
 
         // 2. Draw Cards
         if (!statusText.isEmpty()) {
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(statusText), this.width / 2, this.height / 2, 0xAAAAAA);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(statusText), this.width / 2, this.height / 2, 0xFFAAAAAA);
         }
 
         int gridWidth = this.width - 30;

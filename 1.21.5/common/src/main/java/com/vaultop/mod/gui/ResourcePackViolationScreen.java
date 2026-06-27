@@ -64,8 +64,8 @@ public class ResourcePackViolationScreen extends Screen {
         this.renderBackground(context, mouseX, mouseY, delta);
 
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("UNAUTHORIZED RESOURCE PACKS DETECTED"), this.width / 2, 20, 0xFF5555);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Please remove all custom resource packs (e.g. Xray, cheats) to play."), this.width / 2, 40, 0xAAAAAA);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Only vanilla/built-in resource packs are permitted on this server."), this.width / 2, 52, 0xAAAAAA);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Please remove all custom resource packs (e.g. Xray, cheats) to play."), this.width / 2, 40, 0xFFAAAAAA);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Only vanilla/built-in resource packs are permitted on this server."), this.width / 2, 52, 0xFFAAAAAA);
 
         int currentY = 85;
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Violating Resource Packs:"), this.width / 2, currentY, 0xFFFFFF);
@@ -77,7 +77,7 @@ public class ResourcePackViolationScreen extends Screen {
         }
 
         if (violatingPacks.size() > 8) {
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("... and " + (violatingPacks.size() - 8) + " more packs"), this.width / 2, currentY, 0xAAAAAA);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("... and " + (violatingPacks.size() - 8) + " more packs"), this.width / 2, currentY, 0xFFAAAAAA);
         }
 
         super.render(context, mouseX, mouseY, delta);

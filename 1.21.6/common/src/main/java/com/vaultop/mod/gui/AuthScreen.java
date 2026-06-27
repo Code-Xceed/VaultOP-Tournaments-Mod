@@ -151,7 +151,7 @@ public class AuthScreen extends Screen {
         context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 20, 0xFFFFFF);
         
         // Draw Status text
-        context.drawCenteredTextWithShadow(this.textRenderer, statusText, this.width / 2, this.height / 2 - 30, 0xAAAAAA);
+        context.drawCenteredTextWithShadow(this.textRenderer, statusText, this.width / 2, this.height / 2 - 30, 0xFFAAAAAA);
         
         // Draw Linking Code if available
         if (!codeText.isEmpty()) {

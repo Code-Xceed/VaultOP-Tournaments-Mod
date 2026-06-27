@@ -67,7 +67,7 @@ public class ProtectedModeScreen extends Screen {
         this.renderBackground(context, mouseX, mouseY, delta);
 
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("PROTECTED MODE VIOLATION"), this.width / 2, 15, 0xFF5555);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Unapproved mods or custom resource packs detected."), this.width / 2, 30, 0xAAAAAA);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Unapproved mods or custom resource packs detected."), this.width / 2, 30, 0xFFAAAAAA);
 
         if (!statusText.isEmpty()) {
             context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(statusText), this.width / 2, 45, 0xFFFF55);
@@ -85,7 +85,7 @@ public class ProtectedModeScreen extends Screen {
                 currentY += 12;
             }
             if (violatingMods.size() > 5) {
-                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("... and " + (violatingMods.size() - 5) + " more mods"), this.width / 2, currentY, 0xAAAAAA);
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("... and " + (violatingMods.size() - 5) + " more mods"), this.width / 2, currentY, 0xFFAAAAAA);
                 currentY += 12;
             }
             currentY += 5;
@@ -100,7 +100,7 @@ public class ProtectedModeScreen extends Screen {
                 currentY += 12;
             }
             if (violatingPacks.size() > 5) {
-                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("... and " + (violatingPacks.size() - 5) + " more packs"), this.width / 2, currentY, 0xAAAAAA);
+                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("... and " + (violatingPacks.size() - 5) + " more packs"), this.width / 2, currentY, 0xFFAAAAAA);
                 currentY += 12;
             }
         }
