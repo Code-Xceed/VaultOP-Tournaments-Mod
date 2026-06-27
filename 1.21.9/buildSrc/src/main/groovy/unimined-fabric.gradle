@@ -1,0 +1,7 @@
+plugins {
+    id 'minecraft'
+}
+
+
+runClient.javaLauncher = null
+runServer.javaLauncher = null

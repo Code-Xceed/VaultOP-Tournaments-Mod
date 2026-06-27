@@ -1,0 +1,60 @@
+plugins {
+    id 'common'
+    id 'xyz.wagyourtail.unimined'
+}
+
+unimined.minecraft(sourceSets.main, false) {
+    version gradle.ext.minecraft_version
+
+    mappings {
+        yarn(1)
+    }
+
+    if (project.name == "common") {
+        fabric {
+            loader gradle.ext.fabric_loader
+        }
+        defaultRemapJar = false
+        runs.off = true
+    } else {
+        if (project.name == "fabric") {
+            fabric {
+                loader gradle.ext.fabric_loader
+            }
+        } else if (project.name == "forge") {
+            forge {
+                loader gradle.ext.forge_loader
+            }
+        } else if (project.name == "neoforge") {
+            neoforge {
+                loader gradle.ext.neoforge_loader
+            }
+        }
+
+        mods.modImplementation {
+            mixinRemap {
+                reset()
+                enableBaseMixin()
+                enableMixinExtra()
+            }
+        }
+    }
+}
+
+
+dependencies {
+    if (project.name != "common") {
+        implementation(project(":common"))
+    }
+}
+
+processResources {
+    from project(":common").sourceSets.main.resources
+}
+
+tasks.withType(JavaCompile).configureEach {
+    source(project(":common").sourceSets.main.allSource)
+    if (project.name != "common") {
+        classpath += project(":common").sourceSets.main.compileClasspath
+    }
+}

@@ -1,0 +1,10 @@
+.gradle/
+build/
+*/.gradle/
+*/build/
+*/*/build/
+.idea/
+*.iml
+*.log
+out/
+CODEBASE_ANALYSIS_REPORT.md
