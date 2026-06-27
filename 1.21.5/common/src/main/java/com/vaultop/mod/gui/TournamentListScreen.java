@@ -77,7 +77,36 @@ public class TournamentListScreen extends Screen implements WebSocketMessageList
         }
         
         if (customThumb != null) {
-            context.drawTexture(RenderLayer::getGuiTextured, customThumb, x, y, 0f, 0f, w, h, w, h);
+            int texW = w;
+            int texH = h;
+            String path = customThumb.getPath();
+            if (path.startsWith("tournament_thumb_")) {
+                String cleanId = path.substring("tournament_thumb_".length());
+                int[] dims = DynamicTextureLoader.getTextureDimensions(cleanId);
+                if (dims != null) {
+                    texW = dims[0];
+                    texH = dims[1];
+                }
+            }
+
+            float destAspect = (float) w / h;
+            float srcAspect = (float) texW / texH;
+
+            float cropW, cropH;
+            float uOffset = 0f;
+            float vOffset = 0f;
+
+            if (srcAspect > destAspect) {
+                cropH = texH;
+                cropW = texH * destAspect;
+                uOffset = (texW - cropW) / 2.0f;
+            } else {
+                cropW = texW;
+                cropH = texW / destAspect;
+                vOffset = (texH - cropH) / 2.0f;
+            }
+
+            context.drawTexture(RenderLayer::getGuiTextured, customThumb, x, y, uOffset, vOffset, w, h, (int) cropW, (int) cropH, texW, texH);
             context.draw();
         } else {
             int slices = 15;

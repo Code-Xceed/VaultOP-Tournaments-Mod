@@ -355,7 +355,7 @@ public class TournamentListScreen extends Screen implements WebSocketMessageList
             String name = t.has("name") && !t.get("name").isJsonNull() ? t.get("name").getAsString() : "Unnamed Tournament";
             String status = t.has("status") && !t.get("status").isJsonNull() ? t.get("status").getAsString() : "REG_CLOSED";
             String prizePool = t.has("prizePool") && !t.get("prizePool").isJsonNull() ? t.get("prizePool").getAsString() : "$0";
-            String gameVersion = t.has("gameVersion") && !t.get("gameVersion").isJsonNull() ? t.get("gameVersion").getAsString() : "1.21.8";
+            String gameVersion = t.has("gameVersion") && !t.get("gameVersion").isJsonNull() ? t.get("gameVersion").getAsString() : "1.21.10";
             
             String label = "Not Registered";
             if (t.has("userStatusLabel") && !t.get("userStatusLabel").isJsonNull()) {
