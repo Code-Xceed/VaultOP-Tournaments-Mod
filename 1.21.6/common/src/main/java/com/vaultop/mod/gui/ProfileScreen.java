@@ -511,16 +511,13 @@ public class ProfileScreen extends Screen {
                 }
 
                 if (!rendered) {
-                    // Try actual 3D model rendering (works without joining a world)
-                    if (!render3DPlayerModel(context, skinTex, entityRotation, charCX, charBaseY - (int)(0.78f * scale), scale * 1.08f)) {
-                        // Fallback to 2D rendering
-                        float skinScale = 1.4f;
-                        int headSz = (int) (16 * skinScale);
-                        int torsoH = (int) (24 * skinScale);
-                        int limbH = (int) (24 * skinScale);
-                        int skinCenterY = charBaseY - (headSz + 2 + torsoH + limbH);
-                        render25DCharacter(context, skinTex, charCX, skinCenterY, skinScale);
-                    }
+                    // Fallback to 2D/2.5D rendering in main menu
+                    float skinScale = 1.4f;
+                    int headSz = (int) (16 * skinScale);
+                    int torsoH = (int) (24 * skinScale);
+                    int limbH = (int) (24 * skinScale);
+                    int skinCenterY = charBaseY - (headSz + 2 + torsoH + limbH);
+                    render25DCharacter(context, skinTex, charCX, skinCenterY, skinScale);
                 }
             } else {
                 context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§7Loading skin..."), charCX, centerY + centerH / 2, 0xFFFFFFFF);
