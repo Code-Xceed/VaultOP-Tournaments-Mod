@@ -487,7 +487,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
             int yText = renderY + 26;
             List<OrderedText> descLines = this.textRenderer.wrapLines(Text.literal(description), leftWidth - 16);
             for (OrderedText line : descLines) {
-                context.drawTextWithShadow(this.textRenderer, line, 28, yText, 0x999999);
+                context.drawTextWithShadow(this.textRenderer, line, 28, yText, 0xFF999999);
                 yText += 10;
             }
 
@@ -518,7 +518,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
             int ry = renderY + 26;
             for (int i = 0; i < rules.size(); i++) {
                 context.fill(30, ry + 3, 33, ry + 6, 0xFF2196F3);
-                context.drawTextWithShadow(this.textRenderer, Text.literal(rules.get(i)), 38, ry, 0x999999);
+                context.drawTextWithShadow(this.textRenderer, Text.literal(rules.get(i)), 38, ry, 0xFF999999);
                 ry += 12;
             }
 
@@ -607,7 +607,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
                 List<OrderedText> unLines = this.textRenderer.wrapLines(Text.literal("You have not submitted a registration for this event yet. If registration is open, register now."), leftWidth - 24);
                 int uny = cy + 18;
                 for (OrderedText line : unLines) {
-                    context.drawTextWithShadow(this.textRenderer, line, 34, uny, 0x999999);
+                    context.drawTextWithShadow(this.textRenderer, line, 34, uny, 0xFF999999);
                     uny += 10;
                 }
             }
@@ -625,7 +625,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
             if ("APPROVED".equals(userStatus) && "ONGOING".equals(status) && isServerJoinable) {
                 context.fill(rightX + 8, renderY + 26, rightX + rightWidth - 8, renderY + 58, 0x114CAF50);
                 context.drawTextWithShadow(this.textRenderer, Text.literal("SERVER STATUS: ONLINE"), rightX + 14, renderY + 32, 0xFF4CAF50);
-                context.drawTextWithShadow(this.textRenderer, Text.literal("Matches are in progress. Join now!"), rightX + 14, renderY + 44, 0x999999);
+                context.drawTextWithShadow(this.textRenderer, Text.literal("Matches are in progress. Join now!"), rightX + 14, renderY + 44, 0xFF999999);
 
                 joinButton.visible = btnVisible;
                 joinButton.setX(rightX + 8);
@@ -645,7 +645,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
                 context.fill(rightX + rightWidth - 7, btnY - 2, rightX + rightWidth - 6, btnY + 22, pulseColor);
             } else if ("NOT_REGISTERED".equals(userStatus) && "REG_OPEN".equals(status)) {
                 context.drawTextWithShadow(this.textRenderer, Text.literal("Registration is open!"), rightX + 8, renderY + 26, 0xFF4CAF50);
-                context.drawTextWithShadow(this.textRenderer, Text.literal("Submit details via companion website."), rightX + 8, renderY + 38, 0x999999);
+                context.drawTextWithShadow(this.textRenderer, Text.literal("Submit details via companion website."), rightX + 8, renderY + 38, 0xFF999999);
 
                 registerButton.visible = btnVisible;
                 registerButton.active = true;
@@ -658,7 +658,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
                 firstBtnVisible = btnVisible;
             } else if ("PENDING".equals(userStatus) && !"COMPLETED".equals(status)) {
                 context.drawTextWithShadow(this.textRenderer, Text.literal("Your status is pending."), rightX + 8, renderY + 26, 0xFFFF9800);
-                context.drawTextWithShadow(this.textRenderer, Text.literal("You will connect here once approved."), rightX + 8, renderY + 38, 0x999999);
+                context.drawTextWithShadow(this.textRenderer, Text.literal("You will connect here once approved."), rightX + 8, renderY + 38, 0xFF999999);
 
                 registerButton.visible = btnVisible;
                 registerButton.active = false;

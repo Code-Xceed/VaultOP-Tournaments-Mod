@@ -379,7 +379,7 @@ public class TournamentListScreen extends Screen implements WebSocketMessageList
             currentX += this.textRenderer.getWidth("🎮 ");
             context.drawTextWithShadow(this.textRenderer, Text.literal(gameVersion), currentX, y + 106, 0xFF55FFFF); // Cyan version
             currentX += this.textRenderer.getWidth(gameVersion);
-            context.drawTextWithShadow(this.textRenderer, Text.literal(" | "), currentX, y + 106, 0x999999);
+            context.drawTextWithShadow(this.textRenderer, Text.literal(" | "), currentX, y + 106, 0xFF999999);
             currentX += this.textRenderer.getWidth(" | ");
             context.drawTextWithShadow(this.textRenderer, Text.literal("🏆 "), currentX, y + 106, 0xFFFFD700); // Gold trophy
             currentX += this.textRenderer.getWidth("🏆 ");

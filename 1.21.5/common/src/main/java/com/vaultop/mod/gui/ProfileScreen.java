@@ -469,11 +469,7 @@ public class ProfileScreen extends Screen {
                 skinTex = DynamicTextureLoader.getOrLoad(skinUrl, "skin_" + ign);
             }
             if (skinTex == null) {
-                skinTex = Identifier.of("minecraft", "textures/entity/player/wide/steve.png");
-            }
-            if (skinTex == null) {
-                String fallbackUrl = VaultOPMod.getInstance().getConfigManager().getBackendUrl() + "/api/skin-proxy/Steeeve?type=PREMIUM";
-                skinTex = DynamicTextureLoader.getOrLoad(fallbackUrl, "skin_steeeve");
+                skinTex = net.minecraft.client.util.DefaultSkinHelper.getTexture();
             }
 
             if (skinTex != null) {
