@@ -356,7 +356,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
 
         // Draw header panel
         TournamentListScreen.drawPremiumBeveledBox(context, 0, -2, this.width, 37, 0xD00A0F18, 0x25FFFFFF, 0x10FFFFFF);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(name), this.width / 2, 12, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(name), this.width / 2, 12, 0xFFFFFFFF);
 
         // 1. Draw Giant Esports Banner Card at top
         TournamentListScreen.drawPremiumBeveledBox(context, 20, 45, this.width - 40, 60, 0xBF080C14, 0x802196F3, 0x402196F3);
@@ -495,11 +495,11 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
             int bW = rightWidth;
 
             // Spec 1: Game Version
-            drawSpecCard(context, bX, renderY, bW, "MINECRAFT VERSION", gameVersion, 0xFFFFFF);
+            drawSpecCard(context, bX, renderY, bW, "MINECRAFT VERSION", gameVersion, 0xFFFFFFFF);
             // Spec 2: Prize Pool
             drawSpecCard(context, bX, renderY + 38, bW, "TOURNAMENT PRIZE POOL", prize, 0xFFFFD700);
             // Spec 3: Event Date
-            drawSpecCard(context, bX, renderY + 76, bW, "TOURNAMENT START DATE", date, 0xFFFFFF);
+            drawSpecCard(context, bX, renderY + 76, bW, "TOURNAMENT START DATE", date, 0xFFFFFFFF);
             // Spec 4: Server Status
             String sVal = "ONGOING".equals(status) ? "LIVE" : ("REG_OPEN".equals(status) ? "UPCOMING (REG OPEN)" : ("REG_CLOSED".equals(status) ? "UPCOMING (REG CLOSED)" : "COMPLETED"));
             drawSpecCard(context, bX, renderY + 114, bW, "TOURNAMENT STATUS", sVal, badgeColor);
@@ -535,7 +535,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
                 context.fill(rightX + 10, sy + 3, rightX + 15, sy + 8, 0x33FFFFFF);
                 context.fill(rightX + 11, sy + 4, rightX + 14, sy + 7, 0xFFFFFFFF);
                 context.drawTextWithShadow(this.textRenderer, Text.literal(entry[0]), rightX + 22, sy, 0xFF2196F3);
-                context.drawTextWithShadow(this.textRenderer, Text.literal(entry[1]), rightX + 80, sy, 0xFFFFFF);
+                context.drawTextWithShadow(this.textRenderer, Text.literal(entry[1]), rightX + 80, sy, 0xFFFFFFFF);
                 sy += 18;
             }
 
@@ -553,7 +553,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
                 TournamentListScreen.drawPremiumBeveledBox(context, 28, cy, leftWidth - 16, 32, cardBgColor, cardBorderColor, cardBorderColor);
                 
                 context.drawTextWithShadow(this.textRenderer, Text.literal("✔ APPROVED COMPETITOR"), 34, cy + 4, 0xFF4CAF50);
-                context.drawTextWithShadow(this.textRenderer, Text.literal("Whitelisted IGN: " + registeredIgn), 34, cy + 18, 0xFFFFFF);
+                context.drawTextWithShadow(this.textRenderer, Text.literal("Whitelisted IGN: " + registeredIgn), 34, cy + 18, 0xFFFFFFFF);
                 cy += 38;
                 
                 if (!broadcastMessage.isEmpty()) {
@@ -676,7 +676,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
                 List<OrderedText> pmLines = this.textRenderer.wrapLines(Text.literal("This tournament has ended. You can no longer join the game server for this event."), rightWidth - 16);
                 int pmy = renderY + 38;
                 for (OrderedText line : pmLines) {
-                    context.drawTextWithShadow(this.textRenderer, line, rightX + 8, pmy, 0x888888);
+                    context.drawTextWithShadow(this.textRenderer, line, rightX + 8, pmy, 0xFF888888);
                     pmy += 10;
                 }
             } else {
@@ -687,7 +687,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
                 List<OrderedText> pmLines = this.textRenderer.wrapLines(Text.literal("Strict client scans are active for this tournament. Cheating or invalid modpacks will log blacklists."), rightWidth - 16);
                 int pmy = renderY + 38;
                 for (OrderedText line : pmLines) {
-                    context.drawTextWithShadow(this.textRenderer, line, rightX + 8, pmy, 0x888888);
+                    context.drawTextWithShadow(this.textRenderer, line, rightX + 8, pmy, 0xFF888888);
                     pmy += 10;
                 }
             }
@@ -728,7 +728,7 @@ public class TournamentDetailScreen extends Screen implements WebSocketMessageLi
     private void drawSpecCard(DrawContext context, int x, int y, int w, String label, String value, int valColor) {
         // Stacked premium bevel box: label on top, value on bottom
         TournamentListScreen.drawPremiumBeveledBox(context, x, y, w, 34, 0x80080C14, 0x25FFFFFF, 0x10FFFFFF);
-        context.drawTextWithShadow(this.textRenderer, Text.literal(label), x + 8, y + 5, 0x888888);
+        context.drawTextWithShadow(this.textRenderer, Text.literal(label), x + 8, y + 5, 0xFF888888);
         context.fill(x + 6, y + 14, x + w - 6, y + 15, 0x15FFFFFF); // Subtle 1px separator line
         context.drawTextWithShadow(this.textRenderer, Text.literal(value), x + 16, y + 20, valColor);
     }

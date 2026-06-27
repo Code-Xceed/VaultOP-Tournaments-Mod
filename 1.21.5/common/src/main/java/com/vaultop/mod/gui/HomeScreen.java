@@ -112,11 +112,11 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
         this.renderBackground(context, mouseX, mouseY, delta);
 
         // 1. Draw outer premium dashboard container
+        // 1. Position details
         int panelX = 15;
         int panelY = 32;
         int panelW = this.width - 30;
         int panelH = this.height - 47;
-        TournamentListScreen.drawPremiumBeveledBox(context, panelX, panelY, panelW, panelH, 0xD00A0E17, 0x302196F3, 0x152196F3);
 
         float tick = System.currentTimeMillis() / 50.0f;
 
@@ -134,13 +134,12 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
         int boardY = this.height - 105;
         int boardH = 75;
 
-        TournamentListScreen.drawPremiumBeveledBox(context, boardX, boardY, boardW, boardH, 0xE50B0C0E, 0x40D7A15C, 0x20D7A15C);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§e📢 BULLETINS & ANNOUNCEMENTS"), boardX + boardW / 2, boardY + 4, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§e📢 BULLETINS & ANNOUNCEMENTS"), boardX + boardW / 2, boardY + 4, 0xFFFFFFFF);
         context.fill(boardX + 8, boardY + 13, boardX + boardW - 8, boardY + 14, 0x20FFFFFF);
 
         int scrollAreaH = boardH - 21;
         if (!loadingStatus.isEmpty()) {
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§7" + loadingStatus), boardX + boardW / 2, boardY + 14 + scrollAreaH / 2 - 4, 0xFFFFFF);
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§7" + loadingStatus), boardX + boardW / 2, boardY + 14 + scrollAreaH / 2 - 4, 0xFFFFFFFF);
         } else {
             context.enableScissor(boardX + 2, boardY + 15, boardX + boardW - 2, boardY + boardH - 4);
 
@@ -173,7 +172,7 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
                 if (this.textRenderer.getWidth(title) > cardW - 60) {
                     displayTitle = this.textRenderer.trimToWidth(title, cardW - 70) + "..";
                 }
-                context.drawTextWithShadow(this.textRenderer, Text.literal(categoryTag + " §e" + displayTitle), boardX + 14, currentY + 4, 0xFFFFFF);
+                context.drawTextWithShadow(this.textRenderer, Text.literal(categoryTag + " §e" + displayTitle), boardX + 14, currentY + 4, 0xFFFFFFFF);
 
                 // Description
                 int descY = currentY + 14;
@@ -181,7 +180,7 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
                 int lineCount = 0;
                 for (OrderedText line : wrappedDesc) {
                     if (lineCount >= 2) break;
-                    context.drawTextWithShadow(this.textRenderer, line, boardX + 14, descY + (lineCount * 9), 0xFFFFFF);
+                    context.drawTextWithShadow(this.textRenderer, line, boardX + 14, descY + (lineCount * 9), 0xFFFFFFFF);
                     lineCount++;
                 }
 
