@@ -365,7 +365,7 @@ public class TournamentListScreen extends Screen implements WebSocketMessageList
             }
             
             context.getMatrices().pushMatrix();
-            context.getMatrices().scale(titleScale, titleScale, 1.0f);
+            context.getMatrices().scale(titleScale, titleScale);
             int tx = (int) ((x + 12) / titleScale);
             int ty = (int) ((y + 90) / titleScale);
             context.drawTextWithShadow(this.textRenderer, Text.literal(displayTitle), tx, ty, isHovered ? 0xFF55FFFF : 0xFFFFFFFF);

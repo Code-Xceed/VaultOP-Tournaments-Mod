@@ -40,9 +40,9 @@ public class ResourcePackViolationScreen extends Screen {
             Text.literal("Disconnect"), 
             button -> {
                 if (this.client.world != null) {
-                    this.client.world.disconnect();
+                    this.client.world.disconnect(Text.literal("Disconnected"));
                 }
-                this.client.disconnect();
+                this.client.disconnect(new net.minecraft.client.gui.screen.TitleScreen(), false);
                 this.client.setScreen(new net.minecraft.client.gui.screen.TitleScreen());
             }, 
             0xFF3C464F, 0xFF0C0C0C, 0xFFF44336

@@ -211,8 +211,8 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
     private void drawBigTrophy(DrawContext context, int cx, int cy, float tick) {
         float scale = 1.8f;
         context.getMatrices().pushMatrix();
-        context.getMatrices().translate(cx, cy, 0);
-        context.getMatrices().scale(scale, scale, 1.0f);
+        context.getMatrices().translate(cx, cy);
+        context.getMatrices().scale(scale, scale);
 
         int bob = (int) (Math.sin(tick * 0.12) * 1.5);
         int y = bob;
@@ -266,8 +266,8 @@ public class HomeScreen extends Screen implements WebSocketMessageListener {
         float titleScale = 2.2f + 0.12f * (float) Math.sin(tick * 0.08f);
 
         context.getMatrices().pushMatrix();
-        context.getMatrices().translate(centerX, y, 0);
-        context.getMatrices().scale(titleScale, titleScale, 1.0f);
+        context.getMatrices().translate(centerX, y);
+        context.getMatrices().scale(titleScale, titleScale);
 
         // Center origin for the scaled string
         int startX = -totalWidth / 2;
