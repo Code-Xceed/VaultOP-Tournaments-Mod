@@ -17,6 +17,7 @@ Each directory is a self-contained Gradle project configured for a specific Mine
 * `/1.21.8` - Minecraft 1.21.8 Client Mod
 * `/1.21.9` - Minecraft 1.21.9 Client Mod
 * `/1.21.10` - Minecraft 1.21.10 Client Mod
+* `/1.21.11` - Minecraft 1.21.11 Client Mod
 
 ## Build Instructions
 To build the mod for a specific version:
